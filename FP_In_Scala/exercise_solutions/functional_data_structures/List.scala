@@ -36,7 +36,7 @@ object List {
         xs match {
             case Nil => Cons(y, Nil)
             case Cons(x, xs) => Cons(y, xs)
-        } 
+        }
     }
 
     def drop[A](l:List[A], n:Int):List[A] = {
@@ -58,7 +58,7 @@ object List {
         l match {
             case Nil => None
             case Cons(x, xs) => Some(x)
-        } 
+        }
     }
 
     def checkFirst[A](l:List[A], f:A => Boolean):Boolean = {
@@ -89,7 +89,7 @@ object List {
         l match {
             case Nil => z
             case Cons(x, xs) => f(x, foldRight(xs, z)(f))
-        }       
+        }
     }
 
     def foldRight_optimal[A, B](l:List[A], z:B)(f:(A, B) => B):B = {
@@ -117,7 +117,80 @@ object List {
     }
 
     def concatenate[A](ll:List[List[A]]):List[A] = {
-        val len:Int = List.length(ll) 
+        val len:Int = List.length(ll)
         List.foldRight_optimal(ll, Nil:List[A])((a, b) => List.append(a, b))
+    }
+
+    def add1(l:List[Int]):List[Int] = {
+        // l match {
+        //   case Nil => Nil
+        //   case Cons(x, xs) => Cons(x+1, add1(xs))
+        // }
+        List.foldRight(l, Nil:List[Int])((a, b) => Cons(a+1, b))
+    }
+
+    def dToString(l:List[Double]):List[String] = {
+        // l match {
+        //     case Nil => Nil
+        //     case Cons(x, xs) => Cons(x.toString, dToString(xs))
+        // }
+        List.foldRight(l, Nil:List[String])((a, b) => Cons(a.toString, b))
+    }
+
+    def map[A, B](l:List[A])(f:A => B):List[B] = {
+        // l match {
+        //     case Nil => Nil
+        //     case Cons(x, xs) => Cons(f(x), map(xs)(f))
+        // }
+        List.foldRight_optimal(l, Nil:List[B])((a, b) => Cons(f(a), b))
+    }
+
+    def filter[A](l:List[A])(f:A => Boolean):List[A] = {
+        // l match {
+        //     case Nil => Nil
+        //     case Cons(x, xs) => {
+        //         if (f(x)) Cons(x, filter(xs)(f))
+        //         else filter(xs)(f)
+        //     }
+        // }
+        List.foldRight_optimal(l, Nil:List[A])((a, b) => if (f(a)) Cons(a, b) else b)
+    }
+
+    def flatMap[A, B](l:List[A])(f:A => List[B]):List[B] = {
+        // List.foldRight_optimal(l, Nil:List[B])((a, b) => List.append(f(a), b))
+        concatenate(map(l)(f))
+    }
+
+    def filterViaFlatMap[A](l:List[A])(f:A => Boolean):List[A] = {
+        flatMap(l)((x) => if (f(x)) List(x) else List())
+    }
+
+    def add2Lists(l1:List[Int], l2:List[Int]):List[Int] = {
+        (l1, l2) match {
+            case (Nil, _) => Nil
+            case (_, Nil) => Nil
+            case (Cons(x, xs), Cons(y, ys)) => Cons(x + y, add2Lists(xs, ys))
+        }
+    }
+
+    def zipWith[A](l1:List[A], l2:List[A])(f:(A,A) => A):List[A] = {
+        (l1, l2) match {
+            case (Nil, _) => Nil
+            case (_, Nil) => Nil
+            case (Cons(x, xs), Cons(y, ys)) => Cons(f(x,y), zipWith(xs, ys)(f))
+        }
+    }
+
+    @annotation.tailrec
+    def hasSubsequence[A](sup:List[A], sub:List[A]):Boolean = {
+        (sup, sub) match {
+            case (Nil, Nil) => true
+            case (x, Nil) => true
+            case (Nil, y) => false
+            case (Cons(x, xs), Cons(y, ys)) => {
+                if (x == y) hasSubsequence(xs, ys)
+                else hasSubsequence(xs, sub)
+            }
+        }
     }
 }
