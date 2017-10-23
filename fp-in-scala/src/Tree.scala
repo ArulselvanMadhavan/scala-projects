@@ -40,7 +40,10 @@ object Tree {
   }
 
   def size2[A](t: Tree[A]): Int = fold(t, (_: A) => 1)((ls: Int, rs: Int) => 1 + ls + rs)
-  def maximum2(t:Tree[Int]): Int = fold(t, (x:Int) => x)((ls:Int, rs:Int) => ls max rs)
-  def depth2[A](t:Tree[A]):Int = fold(t, (_: A) => 1)((ls:Int, rs:Int) => 1 + (ls max rs))
-  def map2[A, B](t:Tree[A], f:A => B):Tree[B] = fold(t, (x:A) => Leaf(f(x)):Tree[B])((ls:Tree[B], rs:Tree[B]) => Branch(ls, rs))
+
+  def maximum2(t: Tree[Int]): Int = fold(t, (x: Int) => x)((ls: Int, rs: Int) => ls max rs)
+
+  def depth2[A](t: Tree[A]): Int = fold(t, (_: A) => 1)((ls: Int, rs: Int) => 1 + (ls max rs))
+
+  def map2[A, B](t: Tree[A], f: A => B): Tree[B] = fold(t, (x: A) => Leaf(f(x)): Tree[B])((ls: Tree[B], rs: Tree[B]) => Branch(ls, rs))
 }

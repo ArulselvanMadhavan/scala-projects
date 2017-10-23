@@ -1,0 +1,6 @@
+[2017-05-20 03:08:02,916] INFO org.github.dragos.vscode.Main$ - Starting server in /Users/amadhavan1/dev/scala-projects
+[2017-05-20 03:08:02,916] INFO org.github.dragos.vscode.Main$ - Starting server in /Users/amadhavan1/dev/scala-projects
+[2017-05-20 03:08:02,928] INFO org.github.dragos.vscode.Main$ - Classpath: /Users/amadhavan1/.vscode/extensions/dragos.scala-lsp-0.1.4/coursier
+[2017-05-20 03:08:02,928] INFO org.github.dragos.vscode.Main$ - Classpath: /Users/amadhavan1/.vscode/extensions/dragos.scala-lsp-0.1.4/coursier
+[2017-05-21 06:03:09,286] INFO langserver.core.MessageReader - End of stream, terminating thread
+[2017-05-21 06:03:09,286] INFO langserver.core.MessageReader - End of stream, terminating thread
