@@ -2,7 +2,6 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "Typesafe repository mvn" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
-
 // The Play SBT plugin:
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.10")
 addSbtPlugin("org.ensime" % "sbt-ensime" % "2.0.1")
