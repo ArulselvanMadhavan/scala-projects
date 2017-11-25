@@ -18,6 +18,6 @@ class InsertionSortTest extends FunSuite with Matchers {
       Array(1, 2, 2, 3, 4, 6, 8, 9))
   }
   test("should not alter sorted array") {
-    InsertionSort.sort(Array(1,2,3,4,5)) should be(Array(1,2,3,4,5))
+    InsertionSort.sort(Array(1, 2, 3, 4, 5)) should be(Array(1, 2, 3, 4, 5))
   }
 }
