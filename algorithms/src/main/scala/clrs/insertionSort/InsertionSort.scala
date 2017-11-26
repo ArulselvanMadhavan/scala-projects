@@ -8,8 +8,8 @@ object InsertionSort {
       val currentElem = a(currentIndex)
       a(currentIndex) = a(nextIndex)
       a(nextIndex) = currentElem
-      a
-    } else a
+    }
+    a
   }
 
   def placeElement[T: Ordering](a: Array[T], end: Int): Array[T] =
