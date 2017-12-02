@@ -25,4 +25,14 @@ class MaxSubArrayTests extends FunSuite with Matchers {
     subarr should be(Array(1, 4, 6, 8))
     sum should be(7)
   }
+  test("should work when the subArray is of size 2") {
+    val (subarr, sum) = MaxSubArray.maxSubArray(Array(3, 2))
+    subarr should be(Array())
+    sum should be(0)
+  }
+  test("should work when the subArray is of size 2 and increasing") {
+    val (subarr, sum) = MaxSubArray.maxSubArray(Array(2, 3))
+    subarr should be(Array())
+    sum should be(1)
+  }
 }

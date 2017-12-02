@@ -9,15 +9,11 @@ import clrs.utils.Bounded
 // 5. When you combine and return
 object MaxSubArray {
 
-  // implicit def toString(a:Array[T]):String=
-  //   a.map(_.toString).join(",")
-
   private[this] def findDiffArray[T: Numeric: Bounded: ClassTag](
       a: Array[T]): Array[T] =
     (1 until a.length)
       .foldLeft(new Array[T](a.length))((dArray: Array[T], idx: Int) => {
         dArray(idx) = implicitly[Numeric[T]].minus(a(idx), a(idx - 1))
-        // dArray(0) = implicitly[Numeric[T]].zero
         dArray
       });
 
@@ -56,11 +52,13 @@ object MaxSubArray {
 
   private[this] def stats[T: Numeric: Bounded: ClassTag](
       a: Array[T]): (Int, Int, T) =
-    if (a.length == 1) (0, 0, a(0))
-    else findMaxIndex(findDiffArray(a))
+    findMaxIndex(findDiffArray(a))
 
   def maxSubArray[T: Numeric: Bounded: ClassTag](a: Array[T]): (Array[T], T) = {
-    val (start, end, sum) = stats(a)
-    (a.slice(start - 1, end + 1), sum)
+    val results = stats(a)
+    results match {
+      case (start, end, sum) if (start == end) => (Array(), sum)
+      case (start, end, sum) => (a.slice(start - 1, end + 1), sum)
+    }
   }
 }
