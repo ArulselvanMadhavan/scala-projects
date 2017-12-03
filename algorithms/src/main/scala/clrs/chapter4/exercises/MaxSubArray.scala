@@ -16,25 +16,30 @@ object MaxSubArray {
         dArray(idx) = implicitly[Numeric[T]].minus(a(idx), a(idx - 1))
         dArray
       });
-    result(0) = implicitly[Bounded[T]].minValue
+    result(0) = implicitly[Numeric[T]].negate(a(0))
     result
   }
 
   private[this] def helper[T: Numeric: Bounded: Ordering](
-      a: Array[T])(acc: (Int, T), idx: Int): (Int, T) = {
-    val (currentStartIdx, currentSum): (Int, T) = acc
-    val newSum                                  = implicitly[Numeric[T]].plus(currentSum, a(idx))
-    if (implicitly[Ordering[T]].gt(newSum, currentSum)) (idx, newSum)
-    else acc
+      a: Array[T])(acc: (Int, T, T), idx: Int): (Int, T, T) = {
+    val (currentStartIdx, profit, sum): (Int, T, T) = acc
+    val newSum: T                                   = implicitly[Numeric[T]].plus(sum, a(idx))
+    if (implicitly[Ordering[T]].gt(newSum, profit)) (idx, newSum, newSum)
+    else (acc._1, acc._2, sum)
   }
 
   private[this] def findMaxCrossover[T: Numeric: Bounded](
       a: Array[T]): (Int, Int, T) = {
-    val (start, lsum) = (a.length / 2 to 0 by -1)
-      .foldLeft((a.length / 2, implicitly[Numeric[T]].zero))(helper(a))
-    val (end, rsum) = (a.length / 2 + 1 until a.length)
-      .foldLeft((a.length / 2 + 1, implicitly[Numeric[T]].zero))(helper(a))
-    (start, end, implicitly[Numeric[T]].plus(lsum, rsum))
+    val minValue = implicitly[Bounded[T]].minValue
+    val zero     = implicitly[Numeric[T]].zero
+    val (start, lsum, _) = (a.length / 2 to 0 by -1)
+      .foldLeft((a.length / 2, minValue, zero))(helper(a))
+    val (end, rsum, _) = (a.length / 2 + 1 until a.length)
+      .foldLeft((a.length / 2 + 1, minValue, zero))(helper(a))
+    val total =
+      if (lsum == minValue || rsum == minValue) minValue
+      else implicitly[Numeric[T]].plus(lsum, rsum)
+    (start, end, total)
   }
 
   private[this] def findMaxIndex[T: Numeric: Bounded](
@@ -56,9 +61,9 @@ object MaxSubArray {
 
   def maxSubArray[T: Numeric: Bounded: ClassTag](a: Array[T]): (Array[T], T) = {
     val results = stats(a)
-    val zero = implicitly[Numeric[T]].zero
+    val zero    = implicitly[Numeric[T]].zero
     results match {
-      case (start, end, sum) if(sum == zero) => (Array(), zero)
+      case (start, end, sum) if (implicitly[Numeric[T]].lteq(sum,zero)) => (Array(), zero)
       case (start, end, sum) if (start == end) =>
         (Array(), sum)
       case (start, end, sum) =>
