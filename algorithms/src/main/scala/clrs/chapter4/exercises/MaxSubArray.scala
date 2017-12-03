@@ -63,7 +63,8 @@ object MaxSubArray {
     val results = stats(a)
     val zero    = implicitly[Numeric[T]].zero
     results match {
-      case (start, end, sum) if (implicitly[Numeric[T]].lteq(sum,zero)) => (Array(), zero)
+      case (start, end, sum) if (implicitly[Numeric[T]].lteq(sum, zero)) =>
+        (Array(), zero)
       case (start, end, sum) if (start == end) =>
         (Array(), sum)
       case (start, end, sum) =>
