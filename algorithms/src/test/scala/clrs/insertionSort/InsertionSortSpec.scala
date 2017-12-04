@@ -14,8 +14,7 @@ class InsertionSortTest extends FunSuite with Matchers {
     InsertionSort.sort(Array(1)) should be(Array(1))
   }
   test("should sort big array") {
-    InsertionSort.sort(Array(8, 3, 2, 6, 4, 9, 2, 1)) should be(
-      Array(1, 2, 2, 3, 4, 6, 8, 9))
+    InsertionSort.sort(Array(8, 3, 2, 6, 4, 9, 2, 1)) should be(Array(1, 2, 2, 3, 4, 6, 8, 9))
   }
   test("should not alter sorted array") {
     InsertionSort.sort(Array(1, 2, 3, 4, 5)) should be(Array(1, 2, 3, 4, 5))

@@ -4,8 +4,7 @@ import scala.annotation.tailrec
 object SumOfTwo {
 
   @tailrec
-  private[this] def hasSum[T: Ordering: Numeric](xs: List[T], ys: List[T])(
-      s: T): Boolean =
+  private[this] def hasSum[T: Ordering: Numeric](xs: List[T], ys: List[T])(s: T): Boolean =
     (xs, ys) match {
       case (Nil, _) => false
       case (_, Nil) => false

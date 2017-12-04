@@ -14,8 +14,7 @@ class SelectionSortTest extends FunSuite with Matchers {
     SelectionSort.sort(Array(1)) should be(Array(1))
   }
   test("should sort big array") {
-    SelectionSort.sort(Array(8, 3, 2, 6, 4, 9, 2, 1)) should be(
-      Array(1, 2, 2, 3, 4, 6, 8, 9))
+    SelectionSort.sort(Array(8, 3, 2, 6, 4, 9, 2, 1)) should be(Array(1, 2, 2, 3, 4, 6, 8, 9))
   }
   test("should not alter sorted array") {
     SelectionSort.sort(Array(1, 2, 3, 4, 5)) should be(Array(1, 2, 3, 4, 5))

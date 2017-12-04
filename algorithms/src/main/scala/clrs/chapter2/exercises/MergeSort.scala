@@ -8,11 +8,9 @@ object MergeSort {
   private[this] def divide[T](a: Array[T]): (Array[T], Array[T]) =
     (a slice (0, a.length / 2), a slice (a.length / 2, a.length))
 
-  private[this] def conquer[T: Ordering: ClassTag](a1: Array[T],
-                                                   a2: Array[T]): Array[T] = {
+  private[this] def conquer[T: Ordering: ClassTag](a1: Array[T], a2: Array[T]): Array[T] = {
     val newArraySize = a1.length + a2.length
-    val result = (0 until newArraySize).foldLeft(
-      (0, 0, new Array[T](newArraySize)))((acc, idx) => {
+    val result = (0 until newArraySize).foldLeft((0, 0, new Array[T](newArraySize)))((acc, idx) => {
       if (acc._1 == a1.length) {
         //Pick second array
         acc._3(idx) = a2(acc._2)

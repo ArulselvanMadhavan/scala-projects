@@ -9,8 +9,7 @@ import clrs.utils.Bounded
 // 5. When you combine and return
 object MaxSubArray {
 
-  private[this] def findDiffArray[T: Numeric: Bounded: ClassTag](
-      a: Array[T]): Array[T] = {
+  private[this] def findDiffArray[T: Numeric: Bounded: ClassTag](a: Array[T]): Array[T] = {
     val result = (1 until a.length)
       .foldLeft(new Array[T](a.length))((dArray: Array[T], idx: Int) => {
         dArray(idx) = implicitly[Numeric[T]].minus(a(idx), a(idx - 1))
@@ -20,16 +19,15 @@ object MaxSubArray {
     result
   }
 
-  private[this] def helper[T: Numeric: Bounded: Ordering](
-      a: Array[T])(acc: (Int, T, T), idx: Int): (Int, T, T) = {
+  private[this] def helper[T: Numeric: Bounded: Ordering](a: Array[T])(acc: (Int, T, T),
+                                                                       idx: Int): (Int, T, T) = {
     val (currentStartIdx, profit, sum): (Int, T, T) = acc
     val newSum: T                                   = implicitly[Numeric[T]].plus(sum, a(idx))
     if (implicitly[Ordering[T]].gt(newSum, profit)) (idx, newSum, newSum)
     else (acc._1, acc._2, sum)
   }
 
-  private[this] def findMaxCrossover[T: Numeric: Bounded](
-      a: Array[T]): (Int, Int, T) = {
+  private[this] def findMaxCrossover[T: Numeric: Bounded](a: Array[T]): (Int, Int, T) = {
     val minValue = implicitly[Bounded[T]].minValue
     val zero     = implicitly[Numeric[T]].zero
     val (start, lsum, _) = (a.length / 2 to 0 by -1)
@@ -42,8 +40,7 @@ object MaxSubArray {
     (start, end, total)
   }
 
-  private[this] def findMaxIndex[T: Numeric: Bounded](
-      a: Array[T]): (Int, Int, T) = {
+  private[this] def findMaxIndex[T: Numeric: Bounded](a: Array[T]): (Int, Int, T) = {
     if (a.length == 1) (0, 0, a(0))
     else {
       val result = Seq(findMaxIndex(a.slice(0, a.length / 2)),
@@ -55,8 +52,7 @@ object MaxSubArray {
     }
   }
 
-  private[this] def stats[T: Numeric: Bounded: ClassTag](
-      a: Array[T]): (Int, Int, T) =
+  private[this] def stats[T: Numeric: Bounded: ClassTag](a: Array[T]): (Int, Int, T) =
     findMaxIndex(findDiffArray(a))
 
   def maxSubArray[T: Numeric: Bounded: ClassTag](a: Array[T]): (Array[T], T) = {
@@ -68,8 +64,7 @@ object MaxSubArray {
       case (start, end, sum) if (start == end) =>
         (Array(), sum)
       case (start, end, sum) =>
-        (a.slice(start - 1, end + 1),
-         implicitly[Numeric[T]].minus(a(end), a(start - 1)))
+        (a.slice(start - 1, end + 1), implicitly[Numeric[T]].minus(a(end), a(start - 1)))
     }
   }
 }

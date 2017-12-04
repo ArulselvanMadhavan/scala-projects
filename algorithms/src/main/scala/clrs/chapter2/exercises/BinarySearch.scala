@@ -9,8 +9,7 @@ object BinarySearch {
         case 0  => Some(a.length / 2)
         case -1 => search(a slice (0, a.length / 2))(x)
         case 1 =>
-          search(a slice (a.length / 2, a.length))(x).map(idx =>
-            idx + a.length / 2)
+          search(a slice (a.length / 2, a.length))(x).map(idx => idx + a.length / 2)
       }
     }
   }

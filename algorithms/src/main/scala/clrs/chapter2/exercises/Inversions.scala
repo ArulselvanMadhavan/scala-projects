@@ -2,8 +2,7 @@ package clrs.chapter2.exercises
 
 object Inversions {
 
-  private[this] def combineHelper[T: Ordering](xs: List[T],
-                                               ys: List[T]): (Int, List[T]) =
+  private[this] def combineHelper[T: Ordering](xs: List[T], ys: List[T]): (Int, List[T]) =
     (xs, ys) match {
       case (Nil, _) => (0, ys)
       case (_, Nil) => (0, xs)
@@ -17,9 +16,8 @@ object Inversions {
         }
     }
 
-  private[this] def combine[T: Ordering](
-      left: (Int, List[T]),
-      right: (Int, List[T])): (Int, List[T]) = {
+  private[this] def combine[T: Ordering](left: (Int, List[T]),
+                                         right: (Int, List[T])): (Int, List[T]) = {
     val (lcount, xs): (Int, List[T]) = left
     val (rcount, ys)                 = right
     val (tcount, zs)                 = combineHelper(xs, ys)

@@ -14,8 +14,7 @@ class MergeSortListsTest extends FunSuite with Matchers {
     MergeSortLists.sort(List(1)) should be(List(1))
   }
   test("should sort big array") {
-    MergeSortLists.sort(List(8, 3, 2, 6, 4, 9, 2, 1)) should be(
-      List(1, 2, 2, 3, 4, 6, 8, 9))
+    MergeSortLists.sort(List(8, 3, 2, 6, 4, 9, 2, 1)) should be(List(1, 2, 2, 3, 4, 6, 8, 9))
   }
   test("should not alter sorted array") {
     MergeSortLists.sort(List(1, 2, 3, 4, 5)) should be(List(1, 2, 3, 4, 5))
