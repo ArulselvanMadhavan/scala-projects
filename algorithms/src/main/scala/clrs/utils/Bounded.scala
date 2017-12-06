@@ -1,6 +1,6 @@
 package clrs.utils
 
-trait Bounded[A] {
+sealed trait Bounded[A] {
   def minValue: A
   def maxValue: A
 }

@@ -23,7 +23,7 @@ object BinaryHeap {
   private[this] def buildTree[T](a: Seq[T])(idx: Int): BinaryHeap[T] = {
     ((lchild(idx) < a.length), (rchild(idx) < a.length)) match {
       case (false, _)    => Node(a(idx), Empty, Empty)
-      case (true, false) => Node(a(idx), Node(a(lchild(idx)), Empty, Empty), Empty)
+      case (true, false) => Node(a(idx), buildTree(a)(lchild(idx)), Empty)
       case (_, true)     => Node(a(idx), buildTree(a)(lchild(idx)), buildTree(a)(rchild(idx)))
     }
   }
