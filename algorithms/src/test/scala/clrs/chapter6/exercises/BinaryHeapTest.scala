@@ -21,4 +21,15 @@ class BinaryHeapTests extends FunSuite with Matchers {
     val t5 = BinaryHeap()
     BinaryHeap.height(t5) should be(0)
   }
+  test("should correctly calculate the height of the heap from the array length") {
+    val a1 = Array(4, 5, 6, 7, 8, 1, 2, 3)
+    BinaryHeap.heightFromArray(a1) should be(3)
+    val a2 = new Array[Int](10)
+    BinaryHeap.heightFromArray(a2) should be(3)
+  }
+  test("should work when heapify is called") {
+    val a3 = Array(4, 5, 6, 7, 8, 1, 2, 3)
+    val hp = BinaryHeap.heapify(a3)
+    hp.foreach(println)
+  }
 }
