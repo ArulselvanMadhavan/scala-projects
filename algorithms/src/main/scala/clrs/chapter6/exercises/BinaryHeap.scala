@@ -8,16 +8,6 @@ case object Empty                                                       extends 
 
 object BinaryHeap {
 
-  private[this] def max(x: Int, y: Int): Int =
-    if (x < y) y else x
-
-  def height[T](t: BinaryHeap[T]): Int = {
-    t match {
-      case Empty                => 0
-      case Node(_, left, right) => max(height(left), height(right)) + 1
-    }
-  }
-
   private[this] def swap[T](a: Array[T])(src: Int, dest: Int): Array[T] = {
     val tmp = a(dest)
     a(dest) = a(src)
@@ -45,12 +35,11 @@ object BinaryHeap {
   }
 
   def heapify[T: Ordering](a: Array[T]): Array[T] = {
-    val h = heightFromArray(a)
-    println(s"Height ${h}")
+    val h = height(a)
     (h to 0 by -1).foldLeft(a)(maxHeapify)
   }
 
-  def heightFromArray[T](a: Seq[T]): Int = math.floor(MathUtils.log2(a.length.toDouble)).toInt
+  def height[T](a: Seq[T]): Int = math.floor(MathUtils.log2(a.length.toDouble)).toInt
 
   private[this] def lchild(idx: Int): Int = 2 * idx + 1
   private[this] def rchild(idx: Int): Int = 2 * idx + 2
