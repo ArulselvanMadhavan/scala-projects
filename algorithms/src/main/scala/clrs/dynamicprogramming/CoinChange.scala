@@ -16,7 +16,14 @@ object CoinChange {
     }
   }
 
-  def findMinCoins(coins: Array[Int])(value: Int): Unit = {
+  // private[this] def printArray(mat: Array[Array[Int]]): Unit = {
+  //   for {
+  //     r <- 0 until mat.size
+  //     c <- 0 until mat(0).size
+  //   } print(s"${(r, c)}\t${mat(r)(c)}\n")
+  // }
+
+  def findMinCoins(coins: Array[Int])(value: Int): Int = {
     val row     = value + 1
     val col     = coins.length
     val res     = Array.fill(row, col)(0)
@@ -32,9 +39,7 @@ object CoinChange {
       val argMinCost = costs.indices.minBy(costs)
       res(v)(cidx) = costs(argMinCost)
     }
-    for {
-      r <- 0 until row
-      c <- 0 until col
-    } print(s"${(r, c)}\t${res(r)(c)}\n")
+    // printArray(res)
+    res(row - 1)(col - 1)
   }
 }
