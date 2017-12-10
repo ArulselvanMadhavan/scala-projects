@@ -9,7 +9,9 @@ case object Empty extends BinarySearchTree[Nothing]
 
 object BinarySearchTree {
 
-  type HeightWithNode[T] = (Int, Node[T])
+  type HeightWithNode[T]  = (Int, Node[T])
+  type OrderTraversals[T] = List[List[T]]
+  type BST[T]             = BinarySearchTree[T]
 
   def find[T: Ordering](t: BinarySearchTree[T])(x: T): Option[Node[T]] =
     findWithHeight(t)(x).map(_._2)
@@ -24,6 +26,38 @@ object BinarySearchTree {
       }
     }
     loop(t)(0)
+  }
+
+  def concatListOfLists[T](ll: OrderTraversals[T], rl: OrderTraversals[T]): OrderTraversals[T] = {
+    (ll, rl) match {
+      case (x :: xs, y :: ys) => (x ::: y) :: concatListOfLists(xs, ys)
+      case (Nil, _ :: _)      => rl
+      case (_ :: _, Nil)      => ll
+      case (Nil, Nil)         => Nil
+    }
+  }
+
+  def levelOrderTraversal[T](t: BinarySearchTree[T]): OrderTraversals[T] = {
+    def loop(t: BST[T]): OrderTraversals[T] = {
+      t match {
+        case Empty => Nil
+        case Node(v, l, r) => {
+          val llist = loop(l)
+          val rlist = loop(r)
+          List(v) :: concatListOfLists(llist, rlist)
+        }
+      }
+    }
+    loop(t)
+  }
+  def traversal[T](t: BinarySearchTree[T]): List[T] = {
+    def loop(t: BinarySearchTree[T]): List[T] = {
+      t match {
+        case Empty         => Nil
+        case Node(x, l, r) => x :: (loop(l) ::: loop(r))
+      }
+    }
+    loop(t)
   }
 
   def lca[T: Ordering](t: BinarySearchTree[T])(d1: T, d2: T): Option[T] = {
