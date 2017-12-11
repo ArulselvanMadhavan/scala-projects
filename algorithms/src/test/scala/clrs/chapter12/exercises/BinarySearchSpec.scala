@@ -21,7 +21,6 @@ class BinarySearchTreeTests extends FunSuite with Matchers {
     val b1 = BinarySearchTree(9, 4, 15, 2, 3, 12, 16, 1)
     val ll = BinarySearchTree.traversal(b1)
     ll should be(List(9, 4, 2, 1, 3, 15, 12, 16))
-    println(s"${ll}")
   }
   test("should return a list of elements by their height level") {
     val b1     = BinarySearchTree(13, 10, 15, 8, 12, 7, 9, 11, 14, 16)

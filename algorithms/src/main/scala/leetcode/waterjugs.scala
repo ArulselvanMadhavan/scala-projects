@@ -91,10 +91,12 @@ object WaterJugs {
   }
 
   def isMeasurable(x: Int, y: Int, z: Int): Boolean = {
-    val result = Array.fill(x + 1, y + 1)(false)
-    result(0)(0) = true
-    result(x)(y) = true
-    val paths = nextStep(z, result)((x, 0), List((x,0)))
-    paths.isEmpty == false
+    if (z == 0) true
+    else {
+      val result = Array.fill(x + 1, y + 1)(false)
+      result(0)(0) = true
+      val paths = nextStep(z, result)((x, 0), List((x, 0)))
+      paths.isEmpty == false
+    }
   }
 }
