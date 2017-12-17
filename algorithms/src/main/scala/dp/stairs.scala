@@ -1,5 +1,6 @@
 package dp
 
+// This looks like Fibonacci numbers shifted by 1
 object Stairs {
 
   def countSteps(a: Array[Int], step: Int): Array[Int] = {
