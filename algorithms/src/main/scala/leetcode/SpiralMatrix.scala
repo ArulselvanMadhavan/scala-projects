@@ -9,8 +9,7 @@ object SpiralMatrix {
     (a.size, a(0).size)
   }
 
-  def moveRight(a: Array[Array[Int]])(
-                                      c: PrintCounter): PrintCounter = {
+  def moveRight(a: Array[Array[Int]])(c: PrintCounter): PrintCounter = {
     val i      = 0 + c._1
     val (m, n) = getMatrixDim(a)
     for {
@@ -19,7 +18,7 @@ object SpiralMatrix {
     (c._1 + 1, c._2, c._3, c._4)
   }
 
-  def moveDown(a: Array[Array[Int]])( c: PrintCounter): PrintCounter = {
+  def moveDown(a: Array[Array[Int]])(c: PrintCounter): PrintCounter = {
     val (m, n) = getMatrixDim(a)
     val j      = n - c._2 - 1
     for {
@@ -28,7 +27,7 @@ object SpiralMatrix {
     (c._1, c._2 + 1, c._3, c._4)
   }
 
-  def moveLeft(a: Array[Array[Int]])( c: PrintCounter):  PrintCounter = {
+  def moveLeft(a: Array[Array[Int]])(c: PrintCounter): PrintCounter = {
     val (m, n) = getMatrixDim(a)
     val i      = m - c._3 - 1
     for {
@@ -37,13 +36,13 @@ object SpiralMatrix {
     (c._1, c._2, c._3 + 1, c._4)
   }
 
-  def moveUp(a:Array[Array[Int]])(c:PrintCounter):PrintCounter = {
+  def moveUp(a: Array[Array[Int]])(c: PrintCounter): PrintCounter = {
     val (m, n) = getMatrixDim(a)
-    val j = 0 + c._4
+    val j      = 0 + c._4
     for {
       i <- m - 1 - c._3 to 0 + c._1 by -1
     } println(s"${i}\t${j}\t${a(i)(j)}")
-(c._1,c._2,c._3,c._4+1)
+    (c._1, c._2, c._3, c._4 + 1)
   }
 
   def spiralPrint(a: Array[Array[Int]]): Unit = {
