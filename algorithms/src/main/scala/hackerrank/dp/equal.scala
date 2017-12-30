@@ -2,10 +2,11 @@ package hackerrank.dp
 import java.util.Scanner
 import scala.annotation.tailrec
 
+final case class Stats(chocolates: Array[Int], steps: Int, sum: Int)
+final case class StepsAndRem(steps: Int, rem: Int, divisor: Int)
 object Equal {
 
   type Chocolates = List[Int]
-  type Stats      = (List[Int], Int)
   implicit val chocs: Chocolates = List(5, 2, 1)
 
   def divMod[T: Integral](num: T, den: T): (T, T) = {
@@ -13,27 +14,51 @@ object Equal {
     (intInst.quot(num, den), intInst.rem(num, den))
   }
 
-  @tailrec
-  private[this] def countMin(acc: Int, diff: Int)(implicit cs: Chocolates): Int = {
-    if (diff == 0) acc
-    else if (cs.head <= diff) {
-      val (quot, rem) = divMod(diff, cs.head)
-      countMin(acc + quot, rem)(cs.tail)
-    } else countMin(acc, diff)(cs.tail)
+  def minMod(num: Int)(den: Int): StepsAndRem = {
+    val (steps, rem) = divMod(num, den)
+    val mid          = den / 2
+    if (rem <= mid) StepsAndRem(steps, rem, den)
+    else StepsAndRem(steps + 1, den - rem, den)
   }
 
-  private[this] def wrapper(xs: IndexedSeq[Int])(acc: Stats, idx: Int): Stats = {
-    val start = xs(idx - 1) + acc._1.tail.sum
-    val end   = xs(idx) + acc._1.sum
+  private[this] def findOptimalStep(diff: Int)(implicit cs: Chocolates): StepsAndRem = {
+    cs.map(minMod(diff)).filter(_.steps != 0).minBy(_.steps)
+  }
+
+  private def getMinIndex(a: Array[Int])(idx1: Int, idx2: Int): Int = {
+    val elems        = Seq(idx1, idx2)
+    val smallElemIdx = elems.indices.minBy(a)
+    elems(smallElemIdx)
+  }
+
+  @tailrec
+  private[this] def equalize(idx: Int)(stats: Stats): Stats = {
+    val a     = stats.chocolates
+    val start = a(idx - 1)
+    val end   = a(idx)
     val diff  = end - start
-    val steps = countMin(acc._2, diff)
-    (diff :: acc._1, steps)
+    if (diff == 0) {
+      stats
+    } else {
+      val nextSteps    = findOptimalStep(diff)
+      val smallElemIdx = getMinIndex(a)(idx - 1, idx)
+      val inc = nextSteps.steps * nextSteps.divisor
+      a(smallElemIdx) += inc
+      equalize(idx)(Stats(a, stats.steps + nextSteps.steps, stats.sum + inc))
+    }
+  }
+
+  private[this] def incrementEnd(stats: Stats)(idx: Int): Stats = {
+    val a = stats.chocolates
+    a(idx) += stats.sum
+    stats.copy(chocolates = a)
   }
 
   def getMinSteps(xs: IndexedSeq[Int]): Int = {
-    val xs_sorted = xs.sorted
-    val results   = (1 until xs.length).foldLeft((0 :: Nil: List[Int], 0))(wrapper(xs_sorted))
-    results._2
+    val stats = Stats(xs.sorted.toArray, 0, 0)
+    val results =
+      (1 until xs.length).foldLeft(stats)((acc, idx) => equalize(idx)(incrementEnd(acc)(idx)))
+    results.steps
   }
 
   private[this] def mainHelper(sc: Scanner, N: Int): IndexedSeq[Int] = {

@@ -14,12 +14,12 @@ class EqualSpec extends FunSuite with Matchers {
   //       664, 946, 237, 806, 767, 62, 714, 758, 258, 477, 860, 253, 287, 579, 289, 496))
   //   res1 should equal(5104)
   // }
-  // test("should pass hackerrank testcase#11") {
-    //1 5 5
-  //6 5 10
-  //6 6 11
-  //11 11 11
-  //   val res2 = Equal.getMinSteps(Vector(1, 5, 5))
-  //   res2 should equal(3)
-  // }
+  test("should pass hackerrank testcase#11") {
+    val res2 = Equal.getMinSteps(Vector(1, 5, 5))
+    res2 should equal(3)
+  }
+  test("should pass HR test case#12") {
+    val res3 = Equal.getMinSteps(Vector(1, 5, 5, 10, 10))
+    res3 should equal(7)
+  }
 }
