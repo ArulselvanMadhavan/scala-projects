@@ -3,11 +3,19 @@ import java.util.Scanner
 import scala.annotation.tailrec
 
 final case class Stats(chocolates: Array[Int], steps: Int, sum: Int)
-final case class StepsAndRem(steps: Int, rem: Int, divisor: Int)
+final case class StepsAndRem(steps: Int, rem: Int, divisor: Int) extends Ordered[StepsAndRem] {
+  def compare(that: StepsAndRem): Int = {
+    (this.steps compare that.steps) match {
+      case 0 => this.rem compare that.rem
+      case c => c
+    }
+  }
+}
+
 object Equal {
 
   type Chocolates = List[Int]
-  implicit val chocs: Chocolates = List(5, 2, 1)
+  implicit val chocs: Chocolates = List(1, 2, 5)
 
   def divMod[T: Integral](num: T, den: T): (T, T) = {
     val intInst = implicitly[Integral[T]]
@@ -16,15 +24,15 @@ object Equal {
 
   def minMod(idx: Int, num: Int)(den: Int): StepsAndRem = {
     val (steps, rem) = divMod(num, den)
-    val mid          = den / 2
     if (idx == 1) {
+      val mid = den / 2
       if (rem <= mid) StepsAndRem(steps, rem, den)
       else StepsAndRem(steps + 1, den - rem, den)
     } else StepsAndRem(steps, rem, den)
   }
 
   private[this] def findOptimalStep(idx: Int, diff: Int)(implicit cs: Chocolates): StepsAndRem = {
-    cs.map(minMod(idx, diff)).filter(_.steps != 0).minBy(_.steps)
+    cs.map(minMod(idx, diff)).filter(_.steps != 0).min
   }
 
   private def getMinIndex(a: Array[Int])(idx1: Int, idx2: Int): Int = {

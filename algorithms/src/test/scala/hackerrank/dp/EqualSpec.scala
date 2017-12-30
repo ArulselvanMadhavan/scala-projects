@@ -24,6 +24,14 @@ class EqualSpec extends FunSuite with Matchers {
   }
   test("should work if inputs are not sorted") {
     val res4 = Equal.getMinSteps(Vector(5, 8, 2, 9))
-    res4 should equal(8)
+    res4 should equal(6)
+  }
+  test("should work on decreasing inputs") {
+    val res5 = Equal.getMinSteps(Vector(15, 7, 9, 3))
+    res5 should equal(8)
+  }
+  test("some simple test") {
+    val res6 = Equal.getMinSteps(Vector(62, 2, 1))
+    res6 should equal(14)
   }
 }
