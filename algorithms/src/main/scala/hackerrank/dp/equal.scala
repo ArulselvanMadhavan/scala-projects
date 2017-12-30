@@ -14,15 +14,17 @@ object Equal {
     (intInst.quot(num, den), intInst.rem(num, den))
   }
 
-  def minMod(num: Int)(den: Int): StepsAndRem = {
+  def minMod(idx: Int, num: Int)(den: Int): StepsAndRem = {
     val (steps, rem) = divMod(num, den)
     val mid          = den / 2
-    if (rem <= mid) StepsAndRem(steps, rem, den)
-    else StepsAndRem(steps + 1, den - rem, den)
+    if (idx == 1) {
+      if (rem <= mid) StepsAndRem(steps, rem, den)
+      else StepsAndRem(steps + 1, den - rem, den)
+    } else StepsAndRem(steps, rem, den)
   }
 
-  private[this] def findOptimalStep(diff: Int)(implicit cs: Chocolates): StepsAndRem = {
-    cs.map(minMod(diff)).filter(_.steps != 0).minBy(_.steps)
+  private[this] def findOptimalStep(idx: Int, diff: Int)(implicit cs: Chocolates): StepsAndRem = {
+    cs.map(minMod(idx, diff)).filter(_.steps != 0).minBy(_.steps)
   }
 
   private def getMinIndex(a: Array[Int])(idx1: Int, idx2: Int): Int = {
@@ -36,13 +38,13 @@ object Equal {
     val a     = stats.chocolates
     val start = a(idx - 1)
     val end   = a(idx)
-    val diff  = end - start
+    val diff  = (end - start).abs
     if (diff == 0) {
       stats
     } else {
-      val nextSteps    = findOptimalStep(diff)
+      val nextSteps    = findOptimalStep(idx, diff)
       val smallElemIdx = getMinIndex(a)(idx - 1, idx)
-      val inc = nextSteps.steps * nextSteps.divisor
+      val inc          = nextSteps.steps * nextSteps.divisor
       a(smallElemIdx) += inc
       equalize(idx)(Stats(a, stats.steps + nextSteps.steps, stats.sum + inc))
     }
