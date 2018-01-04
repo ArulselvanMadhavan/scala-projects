@@ -15,7 +15,7 @@ final case class StepsAndRem(steps: Int, rem: Int, divisor: Int) extends Ordered
 object Equal {
 
   type Chocolates = List[Int]
-  implicit val chocs: Chocolates = List(5,2,1)
+  implicit val chocs: Chocolates = List(5, 2, 1)
 
   def divMod[T: Integral](num: T, den: T): (T, T) = {
     val intInst = implicitly[Integral[T]]
