@@ -5,7 +5,7 @@ import java.util.Scanner;
 object Mars {
 
   private[this] def countLoss(sos: String): Int = {
-    ("SOS" zip sos).foldLeft(0) { case (acc, (x, y)) => if (x == y) acc else acc + 1 }
+    ("SOS" zip sos).filter { case (x, y) => x != y }.map(_ => 1).sum
   }
 
   def countMismatch(s: String): Int = {
