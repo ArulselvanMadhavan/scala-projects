@@ -19,6 +19,7 @@ object BinarySearchTree {
   def findWithHeight[T: Ordering](t: BinarySearchTree[T])(x: T): Option[HeightWithNode[T]] = {
     def loop(t: BinarySearchTree[T])(h: Int): Option[HeightWithNode[T]] = {
       t match {
+        case Empty => None
         case Node(_, Empty, Empty)                            => None
         case tt @ Node(v, Node(lval, _, _), _) if (lval == x) => Some((h, tt))
         case tt @ Node(v, _, Node(rval, _, _)) if (rval == x) => Some((h, tt))
