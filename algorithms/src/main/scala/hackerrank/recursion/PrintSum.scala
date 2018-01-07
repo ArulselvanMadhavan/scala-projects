@@ -15,7 +15,10 @@ object PrintSum {
     } yield {
       if (powValue == rem) List(i :: Nil)
       else {
-        findSums(xs)(i + 1, end, rem - powValue).filterNot(_.isEmpty).foldLeft(Nil: Result)(_ ::: _).map(i :: _)
+        findSums(xs)(i + 1, end, rem - powValue)
+          .filterNot(_.isEmpty)
+          .foldLeft(Nil: Result)(_ ::: _)
+          .map(i :: _)
       }
     }
   }
