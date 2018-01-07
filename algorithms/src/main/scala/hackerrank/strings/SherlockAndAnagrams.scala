@@ -17,14 +17,14 @@ object SherlockAnagrams {
     m1.forall { case (k, v) => v == m2.getOrElse(k, 0) }
   }
 
-  private[this] def checkAnagram(prev:String, next: String): Boolean = {
+  private[this] def checkAnagram(prev: String, next: String): Boolean = {
     val m1 = count(prev)
     val m2 = count(next)
     isValidAnagram(m1, m2)
   }
 
   private[this] def computeAnagramsInSubstring(s: String)(acc: Int, size: Int): Int = {
-    val slices  = s.sliding(size).toArray
+    val slices = s.sliding(size).toArray
     val results = for {
       prev <- 0 until slices.length
       next <- (prev + 1) until slices.length

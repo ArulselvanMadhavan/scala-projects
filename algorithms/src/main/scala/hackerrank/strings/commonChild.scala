@@ -1,7 +1,7 @@
 package hackerrank.strings
 
 import java.util.Scanner;
-import utils.TwoDimArray.{printMatrix, findMax};
+import utils.TwoDimArray.{findMax};
 
 object CommonChild {
 
@@ -38,7 +38,6 @@ object CommonChild {
     var a = Array.fill[Int](s1.length + 1, s2.length + 1)(0)
     val f = updateLCS(s1, s2)(_, _, _)
     a = fillMatrix(a, f)
-    // printMatrix(a)
     findMax(a)
   }
 
