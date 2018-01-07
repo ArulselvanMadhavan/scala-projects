@@ -5,19 +5,17 @@ import utils.MathUtils.largestNthRoot
 import utils.FunctionUtils.flip
 
 object PrintSum {
-
+  type Result = List[List[Int]]
   private[this] def findSums(
-      xs: IndexedSeq[Int])(start: Int, end: Int, rem: Int): IndexedSeq[List[Int]] = {
+      xs: IndexedSeq[Int])(start: Int, end: Int, rem: Int): IndexedSeq[Result] = {
     for {
       i        <- start to end
       powValue = xs(i)
       if (powValue <= rem)
     } yield {
-      if (powValue == rem) i :: Nil
+      if (powValue == rem) List(i :: Nil)
       else {
-        //calc new end
-        //i + 1 < end
-        findSums(xs)(i + 1, end, rem - powValue).filterNot(_.isEmpty).map(i :: _).toList.flatten
+        findSums(xs)(i + 1, end, rem - powValue).filterNot(_.isEmpty).foldLeft(Nil: Result)(_ ::: _).map(i :: _)
       }
     }
   }
@@ -27,7 +25,7 @@ object PrintSum {
     val powFunc = (math.pow _).curried
     val powers  = (0 to maxVal).map(_.toDouble).map(flip(powFunc)(n.toDouble)).map(_.toInt)
     val results = findSums(powers)(1, maxVal, x)
-    results.filterNot(_.isEmpty).length
+    results.filterNot(_.isEmpty).flatten.length
   }
 
   def main(args: Array[String]): Unit = {

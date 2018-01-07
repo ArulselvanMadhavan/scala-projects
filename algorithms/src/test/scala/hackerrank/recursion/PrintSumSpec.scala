@@ -15,4 +15,8 @@ class PrintSumSpec extends FunSuite with Matchers {
     val res2 = PrintSum.powerSum(100,3)
     res2 should be(1)
   }
+  test("HR#4") {
+    val res3 = PrintSum.powerSum(400, 2)
+    res3 should be(55)
+  }
 }
