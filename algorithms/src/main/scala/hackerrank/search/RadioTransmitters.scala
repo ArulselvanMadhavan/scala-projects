@@ -2,23 +2,23 @@ package hackerrank.search
 
 import java.util.Scanner;
 
-final case class Result(count: Int, rem: Int)
+final case class Result(count: Int, rem: Int, lastPos:Int)
 
 object RadioTransmitter {
 
   def getMinCoverage(a: IndexedSeq[Int], k: Int): Int = {
-    val maxCoverage = 2 * k
-    val l           = a.sorted
-    val initial     = Result(1, maxCoverage)
-    val result = (1 until l.length).foldLeft(initial)((acc, idx) => {
-      val coverageNeeded = l(idx) - l(idx - 1)
-      // println(s"${l(idx)}\t${coverageNeeded}\t${acc}")
-      if (acc.rem == 0) Result(acc.count + 1, maxCoverage) //Start a new window
-      else if (coverageNeeded <= acc.rem) Result(acc.count, acc.rem - coverageNeeded)
-      else Result(acc.count + 1, maxCoverage) //Gap is so wide. Start a new window
-    })
-    println(s"FinalResult${result}")
-    result.count
+    val l = a.sorted
+    var i = 0
+    var c = 0
+    while (i < l.length) {
+      c += 1
+      var loc = l(i) + k
+      while (i < l.length && l(i) <= loc) i += 1
+      i -= 1
+      loc = l(i) + k
+      while (i < l.length && l(i) <= loc) i += 1
+    }
+    c
   }
 
   def main(args: Array[String]): Unit = {
