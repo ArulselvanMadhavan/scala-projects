@@ -13,6 +13,10 @@ class GraphTest extends FunSuite with Matchers with BeforeAndAfter {
               ("E", 60, "A"))
 
   }
+  test("print the tree with undirected edges") {
+    println(g.succs)
+    println(g.preds)
+  }
   test("should return run dfs using outgoing edges") {
     // println(g.dfs)
     println(g.bfs())

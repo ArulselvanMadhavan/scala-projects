@@ -2,8 +2,6 @@ package hackerrank.search
 
 import java.util.Scanner;
 
-final case class Result(count: Int, rem: Int, lastPos:Int)
-
 object RadioTransmitter {
 
   def getMinCoverage(a: IndexedSeq[Int], k: Int): Int = {

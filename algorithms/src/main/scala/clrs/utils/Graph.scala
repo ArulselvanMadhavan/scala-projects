@@ -31,8 +31,11 @@ case class Edge[E, N: Ordering](from: Graph[E, N], to: Graph[E, N], weight: E)
 class Graph[E, N: Ordering](var value: N = null.asInstanceOf[N]) {
   import EdgeType._
   import NodeStatus._
+
   type TraversalStats = (Map[Graph[E, N], NodeStats], Map[Connection[E, N], EdgeType], Int)
   type NodeStats      = (Int, NodeStatus)
+  type Directed       = Boolean
+
   var inEdges: List[Edge[E, N]]  = Nil
   var outEdges: List[Edge[E, N]] = Nil
 
@@ -57,7 +60,6 @@ class Graph[E, N: Ordering](var value: N = null.asInstanceOf[N]) {
   }
 
   def dfsClassifyEdges: List[(Connection[E, N], EdgeType)] = {
-
     def loop(g: Graph[E, N],
              mg: Map[Graph[E, N], NodeStats],
              me: Map[Connection[E, N], EdgeType],
@@ -104,7 +106,8 @@ class Graph[E, N: Ordering](var value: N = null.asInstanceOf[N]) {
     loop(this, Set()).toList
   }
 
-  def connect(from: N, via: E, to: N): (Graph[E, N], Graph[E, N]) = {
+  def connect(from: N, via: E, to: N)(
+      implicit isDirected: Boolean = false): (Graph[E, N], Graph[E, N]) = {
     val fromGraph: Graph[E, N] = if (value == null) { value = from; this } else
       hop(from) match {
         case Some(g) => g
@@ -117,7 +120,7 @@ class Graph[E, N: Ordering](var value: N = null.asInstanceOf[N]) {
     }
 
     fromGraph.outEdges = new Edge(fromGraph, toGraph, via) :: fromGraph.outEdges
-    toGraph.inEdges = new Edge(fromGraph, toGraph, via) :: toGraph.inEdges
+    if (isDirected == false) toGraph.inEdges = new Edge(fromGraph, toGraph, via) :: toGraph.inEdges
     (fromGraph, toGraph)
   }
 
@@ -137,7 +140,6 @@ class Graph[E, N: Ordering](var value: N = null.asInstanceOf[N]) {
 }
 
 object Graph {
-
   def apply[E, N: Ordering](tuples: (N, E, N)*): Graph[E, N] = {
     val g: Graph[E, N] = Graph.empty
     for ((from, via, to) <- tuples) {
@@ -150,4 +152,12 @@ object Graph {
 
   def empty[E, N: Ordering]: Graph[E, N] = new Graph
 
+  def buildGraphFromMatrix[E](a: Array[Array[E]]): Graph[E, Int] = {
+    val tuples = for {
+      i <- 0 until a.length
+      j <- 0 until a(0).length
+      if a(i)(j) != 0
+    } yield (i, a(i)(j), j)
+    Graph(tuples.toSeq: _*)
+  }
 }
