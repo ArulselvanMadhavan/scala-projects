@@ -29,7 +29,8 @@ object JsonWriterInstances {
         Map(
           "name" -> JsString(value.name),
           "email" -> JsString(value.email)
-        ))
+        )
+      )
   }
 
   implicit def optionWriter[A](implicit writer:JsonWriter[A]):JsonWriter[Option[A]] =
