@@ -14,4 +14,19 @@ Interfaces are generic methods that accept instances of the type class as implic
 Working with Typeclass means working with Implicits values and implicit parameters.
 
 ### Packaging implicits
+* Any definition marked as implicit must be placed inside an object or trait.
+
+### Implicit Scope
+* Place the typeclass instances in the companion object of the typeclass to create an implicit scope.
+* Consists of
+  1. Local or inherited definitions
+  2. Imported definitions
+  3. Definitions in the companion object of the type class
+  4. Definitions in the companion object of the parameter type.
+
+### Four ways to package typeclass instances
+1. Place them in a separate object. - Bring into scope by importing them.
+2. Place them in a trait. - Brought to scope by inheritance.
+3. Place them in companion object of the typeclass. - Typeclass instances are always in scope regardless of where we use them.
+4. Place them in companion object of the the paramter type - Typeclass instances are always in scope regardless of where we use them.
 

@@ -1,3 +1,5 @@
+package com.chapter1
+
 sealed trait Json
 
 final case class JsObject(get: Map[String, Json]) extends Json
@@ -29,6 +31,15 @@ object JsonWriterInstances {
           "email" -> JsString(value.email)
         ))
   }
+
+  implicit def optionWriter[A](implicit writer:JsonWriter[A]):JsonWriter[Option[A]] =
+    new JsonWriter[Option[A]] {
+      def write(value: Option[A]):Json =
+        value match {
+          case Some(x) => writer.write(x)
+          case None => JsNull
+        }
+    }
 }
 
 //Interface object
