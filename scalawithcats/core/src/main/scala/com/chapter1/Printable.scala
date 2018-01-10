@@ -13,7 +13,7 @@ object PrintableInstances {
 
   implicit val stringPrintable = new Printable[String] {
     def format(value:String):String =
-      value.toString
+      value
   }
 
 }
@@ -25,7 +25,17 @@ object Printable {
   }
 
   def print[A](value:A)(implicit p:Printable[A]):Unit = {
-    println(Printable.format(value))
+    println(format(value))
   }
 
+}
+
+object PrintableSyntax {
+  implicit class PrintableOps[A](value:A) {
+    def format(implicit v:Printable[A]):String =
+      v.format(value)
+
+    def print(implicit v:Printable[A]):Unit =
+      println(v.format(value))
+  }
 }
