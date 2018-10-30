@@ -31,15 +31,15 @@ object Typeclasses {
   // For combining two values.
   // Should be associative
   @typeclass trait Semigroup[A] {
-    @op("|+|") def append(x: A, y: => A):A
-    def multiply1(value: A, n: Int):A
+    @op("|+|") def append(x: A, y: => A): A
+    def multiply1(value: A, n: Int): A
   }
 
   // Monoid - Semigroup with zero(empty or identity)
   @typeclass trait Monoid[A] {
     def zero: A
-    def multiply(value:A, n:Int):A =
-      if (n <= 0) zero else multiply(value, n-1)
+    def multiply(value: A, n: Int): A =
+      if (n <= 0) zero else multiply(value, n - 1)
   }
 
   // Band - Append operation of two same elements is idempotent.(gives the same value)
@@ -51,9 +51,9 @@ object Typeclasses {
   case object INR extends Currency
 
   final case class TradeTemplate(
-    payments : List[java.time.LocalDate],
-    ccy : Option[Currency],
-    otc : Option[Boolean]
+      payments: List[java.time.LocalDate],
+      ccy: Option[Currency],
+      otc: Option[Boolean]
   )
 
   object TradeTemplate {
@@ -68,8 +68,13 @@ object Typeclasses {
   }
 
   @typeclass trait Equal[F] {
-    @op("===") def equal(a1: F, a2 : F): Boolean
+    @op("===") def equal(a1: F, a2: F): Boolean
     @op("/==") def notEqual(a1: F, a2: F): Boolean = !equal(a1, a2)
+  }
+
+  @typeclass trait Functor[F[_]] {
+    def map[A, B](fa: F[A])(f: A => B): F[B]
+    def void[A](fa: F[A]): F[Unit] = map(fa)(_ => ())
   }
 
 }
