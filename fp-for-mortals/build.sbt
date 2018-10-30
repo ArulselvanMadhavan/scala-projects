@@ -11,6 +11,7 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= Seq(
       scalaz,
       simulacrum,
+      refined,
       scalaTest % Test
     ),
     scalacOptions in ThisBuild ++= Seq(

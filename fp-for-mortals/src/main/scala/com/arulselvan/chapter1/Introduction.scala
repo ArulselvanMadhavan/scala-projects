@@ -4,10 +4,10 @@ import scalaz._
 import Scalaz._
 import simulacrum._
 
-  trait Terminal[C[_]] {
-    def read: C[String]
-    def write(t: String): C[Unit]
-  }
+trait Terminal[C[_]] {
+  def read: C[String]
+  def write(t: String): C[Unit]
+}
 
 object Introduction {
 
@@ -70,7 +70,7 @@ object Introduction {
     }
   }
 
-  def main(args:Array[String]):Unit = {
+  def main(args: Array[String]): Unit = {
 
     val delayed: IO[String] = echo[IO]
     delayed.interpret()
