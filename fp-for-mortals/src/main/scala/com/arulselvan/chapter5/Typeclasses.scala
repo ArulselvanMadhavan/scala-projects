@@ -253,30 +253,30 @@ object Typeclasses {
 
     @typeclass trait Unzip[F[_]] {
       @op("unfzip") def unzip[A, B](a: F[(A, B)]): (F[A], F[B])
-      def firsts[A, B](a: F[(A, B)]):F[A]
-      def seconds[A, B](a: F[(A, B)]):F[B]
-      def unzip3[A, B, C](x: F[(A, (B, C))]):(F[A], F[B], F[C])
+      def firsts[A, B](a: F[(A, B)]): F[A]
+      def seconds[A, B](a: F[(A, B)]): F[B]
+      def unzip3[A, B, C](x: F[(A, (B, C))]): (F[A], F[B], F[C])
     }
   }
 
   object OptionalFamily {
 
     sealed abstract class Maybe[A]
-    final case class Empty[A]() extends Maybe[A]
+    final case class Empty[A]()    extends Maybe[A]
     final case class Just[A](a: A) extends Maybe[A]
 
     @typeclass trait Optional[F[_]] {
-      def pextract[B, A](fa: F[A]):F[B] \/ A
-      def getOrElse[A](fa: F[A])(default: =>A)
-      def orElse[A](fa:F[A])(alt: =>F[A]):F[A]
-      def isDefined[A](fa:F[A]):Boolean
+      def pextract[B, A](fa: F[A]): F[B] \/ A
+      def getOrElse[A](fa: F[A])(default: => A)
+      def orElse[A](fa: F[A])(alt: => F[A]): F[A]
+      def isDefined[A](fa: F[A]): Boolean
     }
 
     implicit class OptionalOps[F[_]: Optional, A](fa: F[A]) {
-      def ?[X](some: =>X):Conditional[X] = new Conditional[X](some)
+      def ?[X](some: => X): Conditional[X] = new Conditional[X](some)
 
-      final class Conditional[X](some: =>X) {
-        def |(none: =>X):X = if (Optional[F].isDefined(fa)) some else none
+      final class Conditional[X](some: => X) {
+        def |(none: => X): X = if (Optional[F].isDefined(fa)) some else none
       }
     }
   }
@@ -290,7 +290,7 @@ object Typeclasses {
       // def bind[A, B](fa: F[A])(f: A => F[B]):F[B]
       def cobind[A, B](fa: F[A])(f: F[A] => B): F[B]
       // def join[A](fa: F[F[A]]):F[A]
-      def cojoin[A](fa:F[A]):F[F[A]]
+      def cojoin[A](fa: F[A]): F[F[A]]
     }
 
     @typeclass trait Comonad[F[_]] extends Cobind[F] {
@@ -298,36 +298,70 @@ object Typeclasses {
       // def point[A](a: =>A):F[A]
     }
 
-    final case class Hood[A](lefts:IList[A], focus:A, rights:IList[A])
+    final case class Hood[A](lefts: IList[A], focus: A, rights: IList[A])
 
-    object Hood{
-      implicit class Ops[A](hood:Hood[A]) {
+    object Hood {
+      implicit class Ops[A](hood: Hood[A]) {
         def toIList: IList[A] = hood.lefts.reverse ::: hood.focus :: hood.rights
         def previous: Maybe[Hood[A]] = hood.lefts match {
-          case INil() => Empty()
+          case INil()            => Empty()
           case ICons(head, tail) => Just(Hood(tail, head, hood.focus :: hood.rights))
         }
         def next: Maybe[Hood[A]] = hood.rights match {
-          case INil() => Empty()
-          case ICons(head, tail) => Just(hood.focus :: hood.lefts, head, tail)
+          case INil()            => Empty()
+          case ICons(head, tail) => Just(Hood(hood.focus :: hood.lefts, head, tail))
         }
 
-        def more(f: Hood[A] => Maybe[Hood[A]]):IList[Hood[A]] =
+        def more(f: Hood[A] => Maybe[Hood[A]]): IList[Hood[A]] =
           f(hood) match {
             case Empty() => INil()
             case Just(r) => ICons(r, r.more(f))
           }
         def positions: Hood[Hood[A]] = {
-          val left = hood.more(_.previous)
+          val left  = hood.more(_.previous)
           val right = hood.more(_.next)
           Hood(left, hood, right)
+        }
+
+        implicit val comonad: Comonad[Hood] = new Comonad[Hood] {
+          def map[A, B](fa: Hood[A])(f: A => B): Hood[B] =
+            Hood(fa.lefts.map(f), f(fa.focus), fa.rights.map(f))
+          def cobind[A, B](fa: Hood[A])(f: Hood[A] => B): Hood[B] =
+            map(fa.positions)(f)
+          def copoint[A](fa: Hood[A]): A =
+            fa.focus
+          def cojoin[A](fa: Hood[A]): Hood[Hood[A]] =
+            fa.positions
         }
       }
     }
 
     @typeclass trait Cozip[F[_]] {
       // def zip[A, B](a: =>F[A], b: =>F[B]):F[(A, B)]
-      def cozip[A, B](x: F[A \/ B]):F[A] \/ F[B]
+      def cozip[A, B](x: F[A \/ B]): F[A] \/ F[B]
+    }
+  }
+
+  object BiThings {
+    @typeclass trait Bifunctor[F[_, _]] {
+      def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D]
+      @op("<-:") def leftMap[A, B, C](fab: F[A, B])(f: A => C): F[C, B]
+      @op(":->") def rightMap[A, B, C](fab: F[A, B])(f: B => C): F[A, C]
+      @op("<:>") def umap[A, B](fab: F[A, B])(f: A => B): F[B, B]
+    }
+    @typeclass trait Bifoldable[F[_, _]] {
+      def bifoldMap[A, B, M: Monoid](fa: F[A, B])(f: A => M)(g: B => M): M
+      def bifoldRight[A, B, C](fa: F[A, B], z: => C)(f: (A, => C) => C)(g: (B, => C) => C): C
+      def bifoldLeft[A, B, C](fa: F[A, B], z: C)(f: (C, A) => C)(g: (C, B) => C): C
+      def bifoldMap1[A, B, M: Semigroup](fa: F[A, B])(f: A => M)(g: B => M): Option[M]
+    }
+    @typeclass trait Bitraverse[F[_, _]] extends Bifunctor[F] with Bifoldable[F] {
+      def bitraverse[G[_]: Applicative, A, B, C, D](fab: F[A, B])(f: A => G[C])(
+          g: B => G[D]): G[F[C, D]]
+      def bisequence[G[_]: Applicative, A, B](x: F[G[A], G[B]]): G[F[A, B]]
+    }
+    @typeclass trait MonadPlus[F[_]] {
+      def separate[G[_, _]: Bifoldable, A, B](value: F[G[A, B]]):(F[A], F[B])
     }
   }
 
