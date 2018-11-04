@@ -1,5 +1,8 @@
 package com.arulselvan.chapter6
 
+import scalaz._
+import Scalaz._
+
 object DataTypes {
 
   object Variances {
@@ -48,7 +51,7 @@ object DataTypes {
     object Need {
       def apply[A](a: => A): Need[A] = new Need[A] {
         private lazy val value0: A = a
-        def value = value0
+        def value                  = value0
       }
     }
 
@@ -59,7 +62,7 @@ object DataTypes {
     type @@[A, T] = Tag.k.@@[A, T]
 
     object Tag {
-      @inline val k: Tagkind = IdTagkind
+      @inline val k: Tagkind                = IdTagkind
       @inline def apply[A, T](a: A): A @@ T = k(a)
     }
 
@@ -72,5 +75,144 @@ object DataTypes {
       type @@[A, T] = A
       @inline override def apply[A, T](a: A): A = a
     }
+  }
+
+  object Transformations {
+    type ~>[-F[_], +G[_]] = NaturalTransformation[F, G]
+    trait NaturalTransformation[-F[_], +G[_]] {
+      def apply[A](fa: F[A]): G[A]
+      def compose[E[_]](f: E ~> F): E ~> G
+      def andThen[H[_]](f: G ~> H): F ~> H
+    }
+  }
+
+  object Isomorphism {
+
+    trait Iso[Arr[_, _], A, B] {
+      def to: Arr[A, B]
+      def from: Arr[B, A]
+    }
+
+    type IsoSet[A, B] = Iso[Function1, A, B]
+    type <=>[A, B]    = IsoSet[A, B]
+
+    object IsoSet {
+      def apply[A, B](to: A => B, from: B => A): A <=> B = ???
+    }
+
+    trait Iso2[Arr[_[_], _[_]], F[_], G[_]] {
+      def to: Arr[F, G]
+      def from: Arr[G, F]
+    }
+
+    type IsoFunctor[F[_], G[_]] = Iso2[NaturalTransformation, F, G]
+    type <~>[F[_], G[_]]        = IsoFunctor[F, G]
+
+    object IsoFunctor {
+      def apply[F[_], G[_]](to: F ~> G, from: G ~> F): F <~> G = ???
+    }
+
+    trait Iso3[Arr[_[_, _], _[_, _]], F[_, _], G[_, _]] {
+      def to: Arr[F, G]
+      def from: Arr[G, F]
+    }
+
+    type IsoBiFunctor[F[_, _], G[_, _]] = Iso3[~~>, F, G]
+    type <~~>[F[_, _], G[_, _]]         = IsoBiFunctor[F, G]
+
+  }
+
+  object Containers {
+    sealed abstract class Maybe[A] {
+      import Maybe._
+      def cata[B](f: A => B, b: => B): B = this match {
+        case Just(a) => f(a)
+        case Empty() => b
+      }
+      def |(a: => A): A                    = cata(identity, a)
+      def toLeft[B](b: => B): A \/ B       = cata(\/.left, \/-(b))
+      def toRight[B](b: => B): B \/ A      = cata(\/.right, -\/(b))
+      def <\/[B](b: => B): A \/ B          = toLeft(b)
+      def \/>[B](b: => B): B \/ A          = toRight(b)
+      def orZero(implicit A: Monoid[A]): A = ??? // getOrElse(A.zero)
+      def orEmpty[F[_]: Applicative: PlusEmpty]: F[A] =
+        cata(Applicative[F].point(_), PlusEmpty[F].empty)
+    }
+    object Maybe {
+      final case class Empty[A]()    extends Maybe[A]
+      final case class Just[A](a: A) extends Maybe[A]
+
+      def empty[A]: Maybe[A]      = Empty()
+      def just[A](a: A): Maybe[A] = Just(a)
+    }
+
+    implicit class MaybeOps[A](self: A) {
+      def just: Maybe[A] = Maybe.just(self)
+    }
+  }
+
+  object ValidationFamily {
+    // Doesn't have monad instance. Has Applicative, Traverse/BiTraverse, Cozip, Plus, Optional
+    sealed abstract class Validation[+E, +A]
+    final case class Success[A](a: A) extends Validation[Nothing, A]
+    final case class Failure[E](e: E) extends Validation[E, Nothing]
+    type ValidationNel[E, +X] = Validation[NonEmptyList[E], X]
+
+    object Validation {
+      type \?/[+E, +A] = Validation[E, A]
+
+      def success[E, A]: A => Validation[E, A]                               = Success(_)
+      def failure[E, A]: E => Validation[E, A]                               = Failure(_)
+      def failureNel[E, A](e: E): ValidationNel[E, A]                        = Failure(NonEmptyList(e))
+      def lift[E, A](a: A): ValidationNel[E, A]                              = ???
+      def liftNel[E, A](a: A)(f: A => Boolean, fail: E): ValidationNel[E, A] = ???
+      def fromEither[E, A](e: Either[E, A]): Validation[E, A]                = ???
+    }
+
+    implicit class ValidationOps[A](self: A) {
+      def success[X]: Validation[X, A]       = Validation.success[X, A](self)
+      def successNel[X]: ValidationNel[X, A] = success
+      def failure[X]: Validation[A, X]       = Validation.failure[A, X](self)
+      def failureNel[X]: ValidationNel[A, X] = Validation.failureNel[A, X](self)
+    }
+  }
+
+  object TheseFamily {
+    // A data encoding of inclusive logical OR.
+    sealed abstract class \&/[+A, +B]
+    object \&/ {
+      type These[A, B] = A \&/ B
+      final case class This[A](aa: A)           extends (A \&/ Nothing)
+      final case class That[B](bb: B)           extends (Nothing \&/ B)
+      final case class Both[A, B](aa: A, bb: B) extends (A \&/ B)
+
+      def apply[A, B](a: A, b: B): These[A, B] = Both(a, b)
+    }
+
+    implicit class TheseOps[A](self: A) {
+      final def wrapThis[B]: A \&/ B = \&/.This(self)
+      final def wrapThat[B]: B \&/ A = \&/.That(self)
+    }
+    implicit class ThesePairOps[A, B](self: (A, B)) {
+      final def both: A \&/ B = \&/.Both(self._1, self._2)
+    }
+
+    final case class Coproduct[F[_], G[_], A](run: F[A] \/ G[A])
+    object Coproduct {
+      def leftc[F[_], G[_], A](x: F[A]): Coproduct[F, G, A]  = Coproduct(-\/(x))
+      def rightc[F[_], G[_], A](x: G[A]): Coproduct[F, G, A] = Coproduct(\/-(x))
+    }
+  }
+
+  object ConstThings {
+    final case class Const[A, B](getConst: A)
+
+    implicit def applicative[A: Monoid]: Applicative[Const[A, ?]] =
+      new Applicative[Const[A, ?]] {
+        def point[B](b: => B): Const[A, B] =
+          Const(Monoid[A].zero)
+        def ap[B, C](fa: => Const[A, B])(fbc: => Const[A, B => C]): Const[A, C] =
+          Const(fbc.getConst |+| fa.getConst)
+      }
   }
 }
