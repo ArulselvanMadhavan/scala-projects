@@ -361,7 +361,7 @@ object Typeclasses {
       def bisequence[G[_]: Applicative, A, B](x: F[G[A], G[B]]): G[F[A, B]]
     }
     @typeclass trait MonadPlus[F[_]] {
-      def separate[G[_, _]: Bifoldable, A, B](value: F[G[A, B]]):(F[A], F[B])
+      def separate[G[_, _]: Bifoldable, A, B](value: F[G[A, B]]): (F[A], F[B])
     }
   }
 
