@@ -215,4 +215,68 @@ object DataTypes {
           Const(fbc.getConst |+| fa.getConst)
       }
   }
+
+  object CollectionsFamily {
+    sealed abstract class IList[A] {
+      def ::(a: A): IList[A]          = ???
+      def :::(as: IList[A]): IList[A] = ???
+      def toList: List[A]             = ???
+    }
+
+    final case class INil[A]()                         extends IList[A]
+    final case class ICons[A](head: A, tail: IList[A]) extends IList[A]
+    final case class NonEmptyList[A](head: A, tail: IList[A])
+
+    sealed abstract class EphemeralStream[A] {
+      def headOption: Option[A]
+      def tailOption: Option[EphemeralStream[A]]
+    }
+
+    object EphemeralStream {
+      type EStream[A] = EphemeralStream[A]
+      def emptyEphemeralStream[A]: EStream[A]                           = ???
+      def cons[A](a: => A, as: => EStream[A]): EStream[A]               = ???
+      def unfold[A, B](start: => B)(f: B => Option[(A, B)]): EStream[A] = ???
+      def iterate[A](start: A)(f: A => A): EStream[A]                   = ???
+
+      implicit class ConsWrap[A](e: => EStream[A]) {
+        def ##::(h: A): EStream[A] = cons(h, e)
+      }
+
+      implicit class EStreamWrapper[A : Monoid](xs:EStream[A]) {
+        def isEmpty:Boolean = xs.headOption match {
+          case Some(_) => false
+          case None => true
+        }
+        def head():A = xs.headOption match {
+          case Some(x) => x
+          case None => Monoid[A].zero
+        }
+        def tail():EStream[A] = xs.tailOption match {
+          case Some(t) => t
+          case None => emptyEphemeralStream
+        }
+      }
+      object ##:: {
+        def unapply[A : Monoid](xs: EStream[A]):Option[(A, EStream[A])] =
+          if (xs.isEmpty) None
+          else Some((xs.head(), xs.tail()))
+      }
+    }
+
+    object CoRecursiveThings {
+      sealed abstract class CoRecursiveList[A] {
+        type S
+        def init: S
+        def step: S => Maybe[(S, A)]
+      }
+
+      object CoRecursiveList {
+        private final case class CoRecursiveListImpl[S0, A](
+          init: S0,
+          step: S0 => Maybe[(S0, A)]
+        ) extends CoRecursiveList[A] { type S = S0 }
+      }
+    }
+  }
 }
