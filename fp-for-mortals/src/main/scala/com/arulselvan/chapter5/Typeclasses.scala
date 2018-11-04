@@ -85,6 +85,8 @@ object Typeclasses {
       def foldMap[A, B: Monoid](fa: F[A])(f: A => B): B
       def foldRight[A, B](fa: F[A], z: => B)(f: (A, => B) => B): B
       def foldLeft[A, B](fa: F[A], z: B)(f: (B, A) => B): B
+      // def msuml[G[_]: PlusEmpty, A](fa: F[G[A]]): G[A]
+      // def collapse[X[_]: ApplicativePlus, A](x : F[A]): X[A]
     }
 
     trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
@@ -137,11 +139,196 @@ object Typeclasses {
     import Variance._
     @typeclass trait Apply[F[_]] extends Functor[F] {
       @op("<*>") def ap[A, B](fa: => F[A])(f: => F[A => B]): F[B]
-      def apply2[A, B, C](fa: => F[A], fb: => F[B])(f: => (A, B) => C): F[C]
+      def apply2[A, B, C](fa: => F[A], fb: => F[B])(f: (A, B) => C): F[C]
+    }
+
+    class ApplicativeBuilder[F[_]: Apply, A, B](a: F[A], b: F[B]) {
+      def tupled: F[(A, B)] = Apply[F].apply2(a, b) {
+        case (a, b) => Tuple2(a, b)
+      }
+      def |@|[C](fc: F[C]): ApplicativeBuilder3[C] = ???
+      sealed abstract class ApplicativeBuilder3[C](c: F[C])
     }
 
     implicit class ApplyOps[F[_]: Apply, A](self: F[A]) {
-      def *>[B](fb: F[B]): F[B] = Apply[F].apply2(self, fb)((_, b) => b)
+      def *>[B](fb: F[B]): F[B]                         = Apply[F].apply2(self, fb)((_, b) => b)
+      def <*[A](fa: F[A]): F[A]                         = Apply[F].apply2(fa, self)((a, _) => a)
+      def |@|[B](fb: F[B]): ApplicativeBuilder[F, A, B] = new ApplicativeBuilder(self, fb)
+    }
+
+    @typeclass trait Bind[F[_]] extends Apply[F] {
+      @op(">>=") def bind[A, B](fa: F[A])(f: A => F[B]): F[B]
+      def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = bind(fa)(f)
+
+      override def ap[A, B](fa: => F[A])(ff: => F[A => B]): F[B] =
+        bind(ff)(f => map(fa)(f))
+
+      override def apply2[A, B, C](fa: => F[A], fb: => F[B])(f: (A, B) => C): F[C] =
+        bind(fa)(a => map(fb)(b => f(a, b)))
+
+      def join[A](ffa: F[F[A]]): F[A] =
+        bind(ffa)(identity)
+
+      def mproduct[A, B](fa: F[A])(f: A => F[B]): F[(A, B)] =
+        bind(fa)(a => map(f(a))(b => (a, b)))
+
+      def ifM[B](value: F[Boolean], t: => F[B], f: => F[B]): F[B] =
+        bind(value)(v => if (v) t else f)
+    }
+
+    implicit class BindOps[F[_]: Bind, A](self: F[A]) {
+      // Discards the input to bind.
+      def >>=[B](b: => F[B]): F[B] = Bind[F].bind(self)(_ => b)
+      // Runs the effect but discards the output.
+      def >>![B](f: A => F[B]): F[A] = Bind[F].bind(self)(a => Bind[F].map(f(a))(_ => a))
     }
   }
+
+  object ApplicativeAndBind {
+    import ApplyAndBind._
+    // Laws
+    // 1. Identity
+    // 2. Homomorphism
+    // 3. Interchange
+    // 4. Mappy
+    @typeclass trait Applicative[F[_]] extends Apply[F] {
+      def point[A](a: => A): F[A]
+      def pure[A](a: => A): F[A] = point(a)
+    }
+
+    // Laws
+    // 1. Left Identity
+    // 2. Right Identity
+    // 3. Associativity
+    @typeclass trait Monad[F[_]] extends Applicative[F] with Bind[F]
+  }
+
+  object DivideAndConquer {
+    import Variance._
+
+    // Divide is the contravariant equivalent of Apply.
+    @typeclass trait Divide[F[_]] extends Contravariant[F] {
+      def divide[A, B, C](fa: F[A], fb: F[B])(f: C => (A, B)): F[C] =
+        divide2(fa, fb)(f)
+
+      def divide2[A, B, C](fa: F[A], fb: F[B])(f: C => (A, B)): F[C]
+    }
+
+    // Divide's Contravariant equivalent of Applicative
+    @typeclass trait Divisible[F[_]] extends Divide[F] {
+      def conquer[A]: F[A]
+    }
+  }
+
+  object PlusFamily {
+    import ApplicativeAndBind._
+    // Plus is semigroup for type constructors.
+    @typeclass trait Plus[F[_]] {
+      @op("<+>") def plus[A](a: F[A], b: => F[A]): F[A]
+    }
+
+    // PlusEmpty is Monoid for type constructors
+    @typeclass trait PlusEmpty[F[_]] extends Plus[F] {
+      def empty[A]: F[A]
+    }
+    // Useful for querying F[A] and check if it's empty.
+    @typeclass trait IsEmpty[F[_]] extends PlusEmpty[F] {
+      def isEmpty[A](fa: F[A]): Boolean
+    }
+
+    @typeclass trait ApplicativePlus[F[_]] extends Applicative[F] with PlusEmpty[F]
+    @typeclass trait MonadPlus[F[_]] extends Monad[F] with ApplicativePlus[F] {
+      def unite[T[_]: Foldable, A](ts: F[T[A]]): F[A]
+      def withFilter[A](fa: F[A])(f: A => Boolean): F[A]
+    }
+  }
+
+  object ZipFamily {
+    @typeclass trait Zip[F[_]] {
+      def zip[A, B](a: => F[A], b: => F[B]): F[(A, B)]
+      def zipWith[A, B, C](fa: => F[A], fb: => F[B])(f: (A, B) => C)(implicit F: Functor[F]): F[C]
+      def ap(implicit F: Functor[F]): Apply[F]
+      @op("<*|*>") def apzip[A, B](f: => F[A] => F[B], a: => F[A]): F[(A, B)]
+    }
+
+    @typeclass trait Unzip[F[_]] {
+      @op("unfzip") def unzip[A, B](a: F[(A, B)]): (F[A], F[B])
+      def firsts[A, B](a: F[(A, B)]):F[A]
+      def seconds[A, B](a: F[(A, B)]):F[B]
+      def unzip3[A, B, C](x: F[(A, (B, C))]):(F[A], F[B], F[C])
+    }
+  }
+
+  object OptionalFamily {
+
+    sealed abstract class Maybe[A]
+    final case class Empty[A]() extends Maybe[A]
+    final case class Just[A](a: A) extends Maybe[A]
+
+    @typeclass trait Optional[F[_]] {
+      def pextract[B, A](fa: F[A]):F[B] \/ A
+      def getOrElse[A](fa: F[A])(default: =>A)
+      def orElse[A](fa:F[A])(alt: =>F[A]):F[A]
+      def isDefined[A](fa:F[A]):Boolean
+    }
+
+    implicit class OptionalOps[F[_]: Optional, A](fa: F[A]) {
+      def ?[X](some: =>X):Conditional[X] = new Conditional[X](some)
+
+      final class Conditional[X](some: =>X) {
+        def |(none: =>X):X = if (Optional[F].isDefined(fa)) some else none
+      }
+    }
+  }
+
+  object CoThings {
+    import Variance._
+    import OptionalFamily._
+
+    // Co-thing has opposite type signature to whatever thing does.
+    @typeclass trait Cobind[F[_]] extends Functor[F] {
+      // def bind[A, B](fa: F[A])(f: A => F[B]):F[B]
+      def cobind[A, B](fa: F[A])(f: F[A] => B): F[B]
+      // def join[A](fa: F[F[A]]):F[A]
+      def cojoin[A](fa:F[A]):F[F[A]]
+    }
+
+    @typeclass trait Comonad[F[_]] extends Cobind[F] {
+      def copoint[A](p: F[A]): A
+      // def point[A](a: =>A):F[A]
+    }
+
+    final case class Hood[A](lefts:IList[A], focus:A, rights:IList[A])
+
+    object Hood{
+      implicit class Ops[A](hood:Hood[A]) {
+        def toIList: IList[A] = hood.lefts.reverse ::: hood.focus :: hood.rights
+        def previous: Maybe[Hood[A]] = hood.lefts match {
+          case INil() => Empty()
+          case ICons(head, tail) => Just(Hood(tail, head, hood.focus :: hood.rights))
+        }
+        def next: Maybe[Hood[A]] = hood.rights match {
+          case INil() => Empty()
+          case ICons(head, tail) => Just(hood.focus :: hood.lefts, head, tail)
+        }
+
+        def more(f: Hood[A] => Maybe[Hood[A]]):IList[Hood[A]] =
+          f(hood) match {
+            case Empty() => INil()
+            case Just(r) => ICons(r, r.more(f))
+          }
+        def positions: Hood[Hood[A]] = {
+          val left = hood.more(_.previous)
+          val right = hood.more(_.next)
+          Hood(left, hood, right)
+        }
+      }
+    }
+
+    @typeclass trait Cozip[F[_]] {
+      // def zip[A, B](a: =>F[A], b: =>F[B]):F[(A, B)]
+      def cozip[A, B](x: F[A \/ B]):F[A] \/ F[B]
+    }
+  }
+
 }
