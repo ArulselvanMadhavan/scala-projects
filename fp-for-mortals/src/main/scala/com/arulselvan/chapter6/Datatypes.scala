@@ -2,6 +2,7 @@ package com.arulselvan.chapter6
 
 import scalaz._
 import Scalaz._
+import simulacrum._
 
 object DataTypes {
 
@@ -243,22 +244,22 @@ object DataTypes {
         def ##::(h: A): EStream[A] = cons(h, e)
       }
 
-      implicit class EStreamWrapper[A : Monoid](xs:EStream[A]) {
-        def isEmpty:Boolean = xs.headOption match {
+      implicit class EStreamWrapper[A: Monoid](xs: EStream[A]) {
+        def isEmpty: Boolean = xs.headOption match {
           case Some(_) => false
-          case None => true
+          case None    => true
         }
-        def head():A = xs.headOption match {
+        def head(): A = xs.headOption match {
           case Some(x) => x
-          case None => Monoid[A].zero
+          case None    => Monoid[A].zero
         }
-        def tail():EStream[A] = xs.tailOption match {
+        def tail(): EStream[A] = xs.tailOption match {
           case Some(t) => t
-          case None => emptyEphemeralStream
+          case None    => emptyEphemeralStream
         }
       }
       object ##:: {
-        def unapply[A : Monoid](xs: EStream[A]):Option[(A, EStream[A])] =
+        def unapply[A: Monoid](xs: EStream[A]): Option[(A, EStream[A])] =
           if (xs.isEmpty) None
           else Some((xs.head(), xs.tail()))
       }
@@ -273,10 +274,108 @@ object DataTypes {
 
       object CoRecursiveList {
         private final case class CoRecursiveListImpl[S0, A](
-          init: S0,
-          step: S0 => Maybe[(S0, A)]
+            init: S0,
+            step: S0 => Maybe[(S0, A)]
         ) extends CoRecursiveList[A] { type S = S0 }
       }
     }
+
+    object ArrayThings {
+      sealed abstract class ImmutableArray[+A] {
+        def ++[B >: A](o: ImmutableArray[B]): ImmutableArray[B] = ???
+      }
+      object ImmutableArray {
+        final class StringArray(s: String)             extends ImmutableArray[Char]
+        sealed class ImmutableArray1[+A](as: Array[A]) extends ImmutableArray[A]
+        final class ofRef[A <: AnyRef](as: Array[A])   extends ImmutableArray1[A](as)
+        final class ofLong(as: Array[Long])            extends ImmutableArray1[Long](as)
+        def fromArray[A](x: Array[A]): ImmutableArray[A]  = ???
+        def fromString(str: String): ImmutableArray[Char] = ???
+      }
+    }
+
+    object QueueThings {
+      sealed abstract class Dequeue[A] {
+        def frontMaybe: Maybe[A] = ???
+        def backMaybe: Maybe[A]  = ???
+
+        def ++(o: Dequeue[A]): Dequeue[A]  = ???
+        def +:(a: A): Dequeue[A]           = cons(a)
+        def :+(a: A): Dequeue[A]           = snoc(a)
+        def cons(a: A): Dequeue[A]         = ???
+        def snoc(a: A): Dequeue[A]         = ???
+        def uncons: Maybe[(A, Dequeue[A])] = ???
+        def unsnoc: Maybe[(A, Dequeue[A])] = ???
+      }
+
+      private final case class SingletonDequeue[A](single: A) extends Dequeue[A]
+      private final case class FullDequeue[A](
+          front: NonEmptyList[A],
+          fsize: Int,
+          back: NonEmptyList[A],
+          backSize: Int
+      ) extends Dequeue[A]
+      private final case object EmptyDequeue extends Dequeue[Nothing]
+    }
+
+    sealed abstract class ISet[A] {
+      import ISet._
+      val size: Int = this match {
+        case Tip()        => 0
+        case Bin(_, l, r) => 1 + l.size + r.size
+      }
+      def contains(x: A)(implicit o: Order[A]): Boolean        = ???
+      def union(other: ISet[A])(implicit o: Order[A]): ISet[A] = ???
+      def delete(x: A)(implicit o: Order[A]): ISet[A]          = ???
+      def insert(x: A)(implicit o: Order[A]): ISet[A] = this match {
+        case Tip()               => ISet.singleton(x)
+        case self @ Bin(y, l, r) => ??? // o.order(x, y) match {
+        //   case LT => balanceL(y, l.insert(x), r)
+        //   case GT => balanceR(y, l, r.insert(x))
+        //   case EQ => self
+        // }
+      }
+      def balanceL[A](y: A, left: ISet[A], right: ISet[A]): ISet[A] = ???
+    }
+
+    object ISet {
+      private final case class Tip[A]()                             extends ISet[A]
+      private final case class Bin[A](a: A, l: ISet[A], r: ISet[A]) extends ISet[A]
+      def empty[A]: ISet[A]           = Tip()
+      def singleton[A](x: A): ISet[A] = Bin(x, Tip(), Tip())
+      // def fromFoldable[F[_]:Foldable, A:Order](xs:F[A]):ISet[A] =
+      // xs.foldLeft(empty[A])((a, b) => a insert b)
+    }
+
+    sealed abstract class FingerTree[V, A] {
+      def +:(a: A): FingerTree[V, A]                         = ???
+      def :+(a: => A): FingerTree[V, A]                      = ???
+      def <++>(right: => FingerTree[V, A]): FingerTree[V, A] = ???
+    }
+
+    object FingerTree {
+      private class Empty[V, A]()               extends FingerTree[V, A]
+      private class Single[V, A](v: V, a: => A) extends FingerTree[V, A]
+      private class Deep[V, A](
+          v: V,
+          left: Finger[V, A],
+          spine: => FingerTree[V, Node[V, A]],
+          right: Finger[V, A]
+      ) extends FingerTree[V, A]
+
+      sealed abstract class Finger[V, A]
+      final case class One[V, A](v: V, a1: A)                       extends Finger[V, A]
+      final case class Two[V, A](v: V, a1: A, a2: A)                extends Finger[V, A]
+      final case class Three[V, A](v: V, a1: A, a2: A, a3: A)       extends Finger[V, A]
+      final case class Four[V, A](v: V, a1: A, a2: A, a3: A, a4: A) extends Finger[V, A]
+
+      sealed abstract class Node[V, A]
+      private class Node2[V, A](v: V, a1: => A, a2: => A)           extends Node[V, A]
+      private class Node3[V, A](v: V, a1: => A, a2: => A, a3: => A) extends Node[V, A]
+    }
   }
 }
+
+// (a ++ b).toIList
+// (a.++(b)).toIList
+// (a.++(b)) = DList(IList.empty => f(b.f(IList.empty)))
