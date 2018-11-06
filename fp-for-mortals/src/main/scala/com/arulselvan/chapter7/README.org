@@ -1,0 +1,8 @@
+* Advanced Monad
+** Problems with Future
+   - Future conflates the definition of program with interpreting it.
+   - Everytime .flatMap is called, a closure is submitted to an Executor.
+   - Eager evaluation + executor submission => impossible to reason
+     when the job started and finished.
+** Effects and Side Effects
+   - 
