@@ -104,16 +104,15 @@ object AdvancedMonads {
 
       def empty[F[_]: Applicative, A]: MaybeT[F, A] =
         MaybeT(Maybe.empty.pure[F])
-    }
+      implicit def monadPlus[F[_]: Monad] = new MonadPlus[MaybeT[F, ?]] {
+        def point[A](a: => A): MaybeT[F, A] = MaybeT.just(a)
+        def bind[A, B](fa: MaybeT[F, A])(f: A => MaybeT[F, B]): MaybeT[F, B] =
+          MaybeT(fa.run >>= (_.cata(f(_).run, Maybe.empty.pure[F])))
+        def empty[A]: MaybeT[F, A]                                     = MaybeT.empty
+        def plus[A](a: MaybeT[F, A], b: => MaybeT[F, A]): MaybeT[F, A] = a orElse b
+      }
 
-    implicit def monad[F[_]: Monad] = new MonadPlus[MaybeT[F, ?]] {
-      def point[A](a: => A): MaybeT[F, A] = MaybeT.just(a)
-      def bind[A, B](fa: MaybeT[F, A])(f: A => MaybeT[F, B]): MaybeT[F, B] =
-        MaybeT(fa.run >>= (_.cata(f(_).run, Maybe.empty.pure[F])))
-      def empty[A]: MaybeT[F, A]                                     = MaybeT.empty
-      def plus[A](a: MaybeT[F, A], b: => MaybeT[F, A]): MaybeT[F, A] = a orElse b
     }
-
     final case class EitherT[F[_], A, B](run: F[A \/ B])
     object EitherT {
       def either[F[_]: Applicative, A, B](d: A \/ B): EitherT[F, A, B] = ???
@@ -123,15 +122,132 @@ object AdvancedMonads {
       def pure[F[_]: Applicative, A, B](b: B): EitherT[F, A, B]        = ???
     }
 
-    @typeclass trait MonadError[F[_], E] extends Monad[F] {
-      def raiseError[A](e: E): F[A]
-      def handleError[A](fa: F[A])(f: E => F[A]): F[A]
+    trait MonadError[F[_], E] extends Monad[F] {
+      def raiseError[A](e: E): F[A]                    //throw
+      def handleError[A](fa: F[A])(f: E => F[A]): F[A] //catch
     }
 
-    implicit final class MonadErrorOps[F[_], E, A](self: F[A])(implicit val F:MonadError[F, E]){
-      def attempt:F[E \/ A]
-      def recover(f: E => A): F[A]
-      def emap[B](f: A => E \/ B): F[B]
+    implicit def monadError[F[_]: Monad, E] = new MonadError[EitherT[F, E, ?], E] {
+      def bind[A, B](fa: EitherT[F, E, A])(f: A => EitherT[F, E, B]): EitherT[F, E, B] =
+        EitherT(fa.run >>= (_.fold(_.left[B].pure[F], b => f(b).run)))
+      def point[A](a: => A): EitherT[F, E, A]   = EitherT.pure(a)
+      def raiseError[A](e: E): EitherT[F, E, A] = EitherT.pureLeft(e)
+      def handleError[A](fa: EitherT[F, E, A])(f: E => EitherT[F, E, A]): EitherT[F, E, A] =
+        EitherT(fa.run >>= {
+          case -\/(e) => f(e).run
+          case right  => right.pure[F]
+        })
+    }
+
+    implicit final class MonadErrorOps[F[_], E, A](self: F[A])(implicit val F: MonadError[F, E]) {
+      def attempt: F[E \/ A]            = ??? // Brings errors into values.
+      def recover(f: E => A): F[A]      = ??? // Turning an error into a value for all cases.
+      def emap[B](f: A => E \/ B): F[B] = ??? // Apply transformations that can fail.
+    }
+
+    type ReaderT[F[_], A, B] = Kleisli[F, A, B]
+
+    final case class Kleisli[F[_], A, B](run: A => F[B]) {
+      def dimap[C, D](f: C => A, g: B => D)(implicit F: Functor[F]): Kleisli[F, C, D] = ???
+      def >=>[C](k: Kleisli[F, B, C])(implicit F: Bind[F]): Kleisli[F, A, C]          = ???
+      def >==>[C](k: B => F[C])(implicit F: Bind[F]): Kleisli[F, A, C]                = this >=> Kleisli(k)
+    }
+
+    object Kleisli {
+      implicit def kleisliFn[F[_], A, B](k: Kleisli[F, A, B]): A => F[B] = k.run
+    }
+
+    // trait ConfigReader[F[_]] {
+    //   def token: F[RefreshToken]
+    // }
+
+    trait MonadReader[F[_], S] extends Monad[F] {
+      def ask: F[S]
+      def local[A](f: S => S)(fa: F[A]): F[A]
+    }
+
+    implicit def monadReader[F[_]: Monad, R] = new MonadReader[Kleisli[F, R, ?], R] {
+      def point[A](a: => A): Kleisli[F, R, A] = Kleisli(_ => Applicative[F].point(a))
+      def bind[A, B](fa: Kleisli[F, R, A])(f: A => Kleisli[F, R, B]) =
+        Kleisli(r => Monad[F].bind(fa.run(r))(a => f(a).run(r)))
+      def ask: Kleisli[F, R, R] = Kleisli(_.pure[F])
+      def local[A](f: R => R)(fa: Kleisli[F, R, A]): Kleisli[F, R, A] =
+        Kleisli(f andThen fa.run)
+    }
+
+    final case class WriterT[F[_], W, A](run: F[(W, A)])
+    object WriterT {
+
+      def put[F[_]: Functor, W, A](value: F[A])(w: W): WriterT[F, W, A] = ???
+      def putWith[F[_]: Functor, W, A](value: F[A])(w: A => W): WriterT[F, W, A] =
+        WriterT(value.map(a => (w(a), a)))
+
+      trait MonadTell[F[_], W] extends Monad[F] {
+        def writer[A](w: W, v: A): F[A]
+        def tell(w: W): F[Unit]
+        def :++>[A](fa: F[A])(w: => W): F[A]
+        def :++>>[A](fa: F[A])(f: A => W): F[A]
+      }
+
+      trait MonadListen[F[_], W] extends MonadTell[F, W] {
+        def listen[A](fa: F[A]): F[(A, W)]
+        def written[A](fa: F[A]): F[W]
+      }
+
+      // implicit def monadListen[F[_]: Monad, W: Monoid] = new MonadListen[WriterT[F, W, ?], W] {
+        // def point[A](a: => A) = WriterT((Monoid[W].zero, a).point)
+        // def bind[A, B](fa: WriterT[F, W, A])(f: A => WriterT[F, W, B]) = WriterT(
+          // fa.run >>= { case (wa, a) => f(a).run.map { case (wb, b) => (wa |+| wb, b)}}
+        // )
+        // def writer[A](w: W, v: A) = WriterT((w -> v).point)
+        // def listen[A](fa:WriterT[F,W,A]) = WriterT(
+          // fa.run.map {case (w, a) => (w, (a, w))}
+        // )
+        // }
+      // sealed trait Log
+      // final case class Debug(msg: String)(implicit m: Meta) extends Log
+      // final case class Info(msg: String)(implicit m: Meta) extends Log
+      // final case class Warning(msg: String)(implicit m: Meta) extends Log
+    }
+
+    object StateThings {
+
+      trait MonadState[F[_], S] extends Monad[F] {
+        def put(s: S): F[Unit]
+        def get: F[S]
+        def modify(f: S => S): F[Unit] = get >>= (s => put(f(s)))
+      }
+
+      sealed abstract class StateT[F[_], S, A] {
+        import StateT._
+        def run(initial: S)(implicit F: Monad[F]): F[(S, A)] = this match {
+          case Point(f) => f(initial)
+          case FlatMap(Point(f), g) =>
+            f(initial) >>= {case (s,a) => g(s, a).run(s)}
+          case FlatMap(FlatMap(f,g), h) =>
+            FlatMap(f, (s, x) => FlatMap(g(s, x), h)).run(initial)
+        }
+      }
+
+      object StateT {
+        def apply[F[_], S, A](f: S => F[(S, A)]): StateT[F, S, A] = Point(f)
+        private final case class Point[F[_], S, A](
+          run: S => F[(S, A)]
+        ) extends StateT[F, S, A]
+        private final case class FlatMap[F[_], S, A, B](
+          a: StateT[F, S, A],
+          f: (S, A) => StateT[F, S, B]
+        ) extends StateT[F, S, B]
+        def stateT[F[_]: Applicative, S, A](a: A): StateT[F, S, A] = ???
+      }
+
+      implicit def monad[F[_] : Applicative, S] = new MonadState[StateT[F, S, ?], S] {
+        def point[A](a: =>A):StateT[F, S, A] = Point(s => (s, a).point[F])
+        def bind[A, B](fa: StateT[F, S, A])(f: A => StateT[F, S, B]):StateT[F, S, B] =
+          FlatMap(fa, (_, a:A) => f(a))
+        def get = Point(s => (s, s).point[F])
+        def put(s: S) = Point(_ => (s, ()).point[F])
+      }
     }
   }
 }
