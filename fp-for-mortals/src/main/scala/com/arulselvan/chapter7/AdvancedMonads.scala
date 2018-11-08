@@ -195,15 +195,15 @@ object AdvancedMonads {
       }
 
       // implicit def monadListen[F[_]: Monad, W: Monoid] = new MonadListen[WriterT[F, W, ?], W] {
-        // def point[A](a: => A) = WriterT((Monoid[W].zero, a).point)
-        // def bind[A, B](fa: WriterT[F, W, A])(f: A => WriterT[F, W, B]) = WriterT(
-          // fa.run >>= { case (wa, a) => f(a).run.map { case (wb, b) => (wa |+| wb, b)}}
-        // )
-        // def writer[A](w: W, v: A) = WriterT((w -> v).point)
-        // def listen[A](fa:WriterT[F,W,A]) = WriterT(
-          // fa.run.map {case (w, a) => (w, (a, w))}
-        // )
-        // }
+      // def point[A](a: => A) = WriterT((Monoid[W].zero, a).point)
+      // def bind[A, B](fa: WriterT[F, W, A])(f: A => WriterT[F, W, B]) = WriterT(
+      // fa.run >>= { case (wa, a) => f(a).run.map { case (wb, b) => (wa |+| wb, b)}}
+      // )
+      // def writer[A](w: W, v: A) = WriterT((w -> v).point)
+      // def listen[A](fa:WriterT[F,W,A]) = WriterT(
+      // fa.run.map {case (w, a) => (w, (a, w))}
+      // )
+      // }
       // sealed trait Log
       // final case class Debug(msg: String)(implicit m: Meta) extends Log
       // final case class Info(msg: String)(implicit m: Meta) extends Log
@@ -215,39 +215,85 @@ object AdvancedMonads {
       trait MonadState[F[_], S] extends Monad[F] {
         def put(s: S): F[Unit]
         def get: F[S]
-        def modify(f: S => S): F[Unit] = get >>= (s => put(f(s)))
+        def modify(f: S => S): F[Unit] = bind(get)(s => put(f(s)))
       }
 
       sealed abstract class StateT[F[_], S, A] {
         import StateT._
+
         def run(initial: S)(implicit F: Monad[F]): F[(S, A)] = this match {
           case Point(f) => f(initial)
           case FlatMap(Point(f), g) =>
-            f(initial) >>= {case (s,a) => g(s, a).run(s)}
-          case FlatMap(FlatMap(f,g), h) =>
-            FlatMap(f, (s, x) => FlatMap(g(s, x), h)).run(initial)
+            f(initial) >>= { case (s, a) => g(s, a).run(s) }
+          case FlatMap(FlatMap(f, g), h) =>
+            FlatMap(f, (s: S, x: Any) => FlatMap(g(s, x), h)).run(initial)
         }
       }
 
       object StateT {
         def apply[F[_], S, A](f: S => F[(S, A)]): StateT[F, S, A] = Point(f)
         private final case class Point[F[_], S, A](
-          run: S => F[(S, A)]
+            run: S => F[(S, A)]
         ) extends StateT[F, S, A]
         private final case class FlatMap[F[_], S, A, B](
-          a: StateT[F, S, A],
-          f: (S, A) => StateT[F, S, B]
+            a: StateT[F, S, A],
+            f: (S, A) => StateT[F, S, B]
         ) extends StateT[F, S, B]
         def stateT[F[_]: Applicative, S, A](a: A): StateT[F, S, A] = ???
       }
 
-      implicit def monad[F[_] : Applicative, S] = new MonadState[StateT[F, S, ?], S] {
-        def point[A](a: =>A):StateT[F, S, A] = Point(s => (s, a).point[F])
-        def bind[A, B](fa: StateT[F, S, A])(f: A => StateT[F, S, B]):StateT[F, S, B] =
-          FlatMap(fa, (_, a:A) => f(a))
-        def get = Point(s => (s, s).point[F])
-        def put(s: S) = Point(_ => (s, ()).point[F])
+      // implicit def monad[F[_] : Applicative, S] = new MonadState[StateT[F, S, ?], S] {
+
+      // def point[A](a: =>A):StateT[F, S, A] = Point(s => (s, a).point[F])
+      // def bind[A, B](fa: StateT[F, S, A])(f: A => StateT[F, S, B]):StateT[F, S, B] =
+      //   FlatMap(fa, (_, a:A) => f(a))
+      // def get = Point(s => (s, s).point[F])
+      // def put(s: S) = Point(_ => (s, ()).point[F])
+      // }
+    }
+
+    object TheseThings {
+      final case class TheseT[F[_], A, B](run: F[A \&/ B])
+      object TheseT {
+        def `this`[F[_]: Functor, A, B](a: F[A]): TheseT[F, A, B]     = ???
+        def that[F[_]: Functor, A, B](b: F[B]): TheseT[F, A, B]       = ???
+        def both[F[_]: Functor, A, B](ab: F[(A, B)]): TheseT[F, A, B] = ???
+
+        implicit def monad[F[_]: Monad, A: Semigroup] = new Monad[TheseT[F, A, ?]] {
+          def bind[B, C](fa: TheseT[F, A, B])(f: B => TheseT[F, A, C]) = ???
+          // TheseT(fa.run >>= {
+          //   case This(a) => a.wrapThis[C].point[F]
+          //   case That(b) => f(b).run
+          //   case Both(a, b) =>
+          //     f(b).run.map {
+          //       case This(a_) => (a |+| a_).wrapThis[C]
+          //       case That(c_) => Both(a, c_)
+          //       case Both(a_, c_) => Both(a |+| a_, c_)
+          //     }
+          // })
+          def point[B](b: => B) = TheseT(b.wrapThat.point[F])
+        }
       }
     }
+
+    // CPS - Continuation Passing Style
+    object ContThings {
+
+      final case class ContT[F[_], B, A](_run: (A => F[B]) => F[B]) {
+        def run(f: A => F[B]):F[B] = _run(f)
+      }
+
+      object IndexedContT {
+        implicit def monad[F[_], B] = new Monad[ContT[F, B, ?]] {
+          def point[A](a: =>A) = ContT(_(a))
+          def bind[A, C](fa: ContT[F, B, A])(f: A => ContT[F, B, C]) =
+            ContT(c_fb => fa.run(a => f(a).run(c_fb)))
+        }
+      }
+
+      implicit class ContTOps[F[_]: Monad, A](self: F[A]) {
+        def cps[B]: ContT[F, B, A] = ContT(a_fb => self >>= a_fb)
+      }
+    }    
   }
 }
