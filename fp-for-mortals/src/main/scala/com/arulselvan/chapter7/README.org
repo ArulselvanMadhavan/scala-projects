@@ -36,3 +36,5 @@
    - Monads are explicitly forbidden from running effects in parallel.
    - If we have an ~F[_]~ that is not monadic, we may implement
      /apply2/ in parallel.
+** IO
+   - A Free data structure specialized for use as a general effect monad.
