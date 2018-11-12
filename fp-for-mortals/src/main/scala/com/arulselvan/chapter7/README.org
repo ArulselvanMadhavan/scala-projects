@@ -7,3 +7,6 @@
 ** Free Monad - Where can we find this to be useful?
    - In testing.
      - We can create partial interpreters.
+** Coyoneda
+   - Nobuo Yoneda invented it.
+   - We can freely generate a Functor data structure for any algebra S[_]

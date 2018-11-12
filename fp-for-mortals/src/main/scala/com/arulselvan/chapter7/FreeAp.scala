@@ -9,7 +9,7 @@ object FreeAp {
     def hoist[G[_]](f: S ~> G): FreeAp[G, A]        = ???
     def foldMap[G[_]: Applicative](f: S ~> G): G[A] = ???
     // Generate Free[S, A] from FreeAp[S, A].
-    def monadic: Free[S, A]                                     = ???
+    def monadic: Free[S, A] = ???
     def analyze[M: Monoid](f: S ~> λ[α => M]): M =
       foldMap(λ[S ~> Const[M, ?]](x => Const(f(x)))).getConst
   }
@@ -90,25 +90,25 @@ object FreeAp {
         extends DynAgents[F] {
       def act(world: WorldView): F[WorldView] = ???
     }
-    val world: WorldView = ???
-    val program          = new DynAgentsModule(Drone.liftA[Orig], Machines.liftA[Orig])
-    val freeap:FreeAp[Orig, WorldView]           = program.act(world)
+    val world: WorldView                = ???
+    val program                         = new DynAgentsModule(Drone.liftA[Orig], Machines.liftA[Orig])
+    val freeap: FreeAp[Orig, WorldView] = program.act(world)
     val gather = λ[Orig ~> λ[α => IList[MachineNode]]] {
       case Coproduct(-\/(Machines.Start(node))) => IList.single(node)
-      case _ => IList.empty
+      case _                                    => IList.empty
     }
     val gathered: IList[MachineNode] = freeap.analyze(gather)
 
     type Extended[a] = Coproduct[Batch.Ast, Orig, a]
-    def batch(nodes: IList[MachineNode]):FreeAp[Extended, Unit] =
+    def batch(nodes: IList[MachineNode]): FreeAp[Extended, Unit] =
       nodes.toNel match {
-        case None => FreeAp.pure(())
+        case None        => FreeAp.pure(())
         case Some(nodes) => FreeAp.lift(Coproduct.leftc(Batch.Start(nodes)))
       }
 
     val nostart = λ[Orig ~> FreeAp[Extended, ?]] {
       case Coproduct(-\/(Machines.Start(_))) => FreeAp.pure(())
-      case other => FreeAp.lift(Coproduct.rightc(other))
+      case other                             => FreeAp.lift(Coproduct.rightc(other))
     }
 
     val patched = batch(gathered) *> freeap.foldMap(nostart)
