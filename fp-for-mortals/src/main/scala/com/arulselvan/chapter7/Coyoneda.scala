@@ -27,4 +27,39 @@ object Coyoneda {
     def lift[S[_], A](sa: S[A]): ContravariantCoyoneda[S, A] =
       ContraMap[S, A, A](sa, identity)
   }
+
+  type Epoch       = Int
+  type MachineNode = String
+  type WorldView   = String
+
+  trait Machines[F[_]] {
+    def getTime: F[Epoch]
+    def getManaged: F[NonEmptyList[MachineNode]]
+    def getAlive: F[Map[MachineNode, Epoch]]
+    def start(node: MachineNode): F[Unit]
+    def stop(node: MachineNode): F[Unit]
+  }
+
+  object Machines {
+    sealed abstract class Ast[A]
+    final case class GetTime()                extends Ast[Epoch]
+    final case class GetManaged()             extends Ast[NonEmptyList[MachineNode]]
+    final case class GetAlive()               extends Ast[Map[MachineNode, Epoch]]
+    final case class Start(node: MachineNode) extends Ast[Unit]
+    final case class Stop(node: MachineNode)  extends Ast[Unit]
+    def liftCoyo[F[_]](implicit I: Ast :<: F) = new Machines[Coyoneda[F, ?]] {
+      def getTime                  = Coyoneda.lift(I.inj(GetTime()))
+      def getManaged               = Coyoneda.lift(I.inj(GetManaged()))
+      def getAlive                 = Coyoneda.lift(I.inj(GetAlive()))
+      def start(node: MachineNode) = Coyoneda.lift(I.inj(Start(node)))
+      def stop(node: MachineNode)  = Coyoneda.lift(I.inj(Stop(node)))
+    }
+    def liftCoyoyo[F[_]](implicit I: Ast :<: F) = new Machines[ContravariantCoyoneda[F, ?]] {
+      def getTime                  = ContravariantCoyoneda.lift(I.inj(GetTime()))
+      def getManaged               = ContravariantCoyoneda.lift(I.inj(GetManaged()))
+      def getAlive                 = ContravariantCoyoneda.lift(I.inj(GetAlive()))
+      def start(node: MachineNode) = ContravariantCoyoneda.lift(I.inj(Start(node)))
+      def stop(node: MachineNode)  = ContravariantCoyoneda.lift(I.inj(Stop(node)))
+    }
+  }
 }

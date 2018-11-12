@@ -10,3 +10,29 @@
 ** Coyoneda
    - Nobuo Yoneda invented it.
    - We can freely generate a Functor data structure for any algebra S[_]
+   - Coyo and Cocoyo can be a useful type if we want to map or
+     contramap over a type, and we know that we can convert into a
+     datatype that has a functor instance but we don't want to commit
+     to the final data structure too early.
+   - Allows mapfusion.
+     #+BEGIN_SRC scala
+     xs.map(a).map(b).map(c)
+    // can be written as
+     xs.map(x => c(b(a(x))))
+     #+END_SRC
+** Extensible Effects
+   - Programs are just data.
+   - Free structures help to make this explicit and give us the
+     ability to rearrange and optimize that data.
+   - Free can sequence arbitrary algebras and typeclasses.
+   - /Initial Encoding/ - A Free AST for an algebra or typeclass
+   - /Finally Tagless/ - A direct implementation of the initial
+     encoding.
+   - To use finally tagless style,
+     - we need a high performance effect
+       type that provides all the monad typeclasses.
+     - We still need to be able to run our /Applicative/ code in parallel.
+** Parallel
+   - Monads are explicitly forbidden from running effects in parallel.
+   - If we have an ~F[_]~ that is not monadic, we may implement
+     /apply2/ in parallel.
