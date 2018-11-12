@@ -286,7 +286,7 @@ object AdvancedMonads {
       object IndexedContT {
         implicit def monad[F[_], B] = new Monad[ContT[F, B, ?]] {
           def point[A](a: =>A) = ContT(_(a))
-          def bind[A, C](fa: ContT[F, B, A])(f: A => ContT[F, B, C]) =
+          def bind[A, C](fa: ContT[F, B, A])(f: A => ContT[F, B, C]):ContT[F, B, C] =
             ContT(c_fb => fa.run(a => f(a).run(c_fb)))
         }
       }
