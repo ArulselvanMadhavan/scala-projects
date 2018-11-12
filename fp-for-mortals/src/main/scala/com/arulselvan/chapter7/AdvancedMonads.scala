@@ -280,13 +280,13 @@ object AdvancedMonads {
     object ContThings {
 
       final case class ContT[F[_], B, A](_run: (A => F[B]) => F[B]) {
-        def run(f: A => F[B]):F[B] = _run(f)
+        def run(f: A => F[B]): F[B] = _run(f)
       }
 
       object IndexedContT {
-        implicit def monad[F[_], B] = new Monad[ContT[F, B, ?]] {
-          def point[A](a: =>A) = ContT(_(a))
-          def bind[A, C](fa: ContT[F, B, A])(f: A => ContT[F, B, C]):ContT[F, B, C] =
+        implicit def monad[F[_], B]: Monad[ContT[F, B, ?]] = new Monad[ContT[F, B, ?]] {
+          def point[A](a: => A) = ContT(_(a))
+          def bind[A, C](fa: ContT[F, B, A])(f: A => ContT[F, B, C]): ContT[F, B, C] =
             ContT(c_fb => fa.run(a => f(a).run(c_fb)))
         }
       }
@@ -294,6 +294,6 @@ object AdvancedMonads {
       implicit class ContTOps[F[_]: Monad, A](self: F[A]) {
         def cps[B]: ContT[F, B, A] = ContT(a_fb => self >>= a_fb)
       }
-    }    
+    }
   }
 }

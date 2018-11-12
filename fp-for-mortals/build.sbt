@@ -10,6 +10,7 @@ lazy val root = (project in file(".")).
     name := "FP-for-mortals",
     libraryDependencies ++= Seq(
       scalaz,
+      scalazIO,
       simulacrum,
       refined,
       scalaTest % Test
