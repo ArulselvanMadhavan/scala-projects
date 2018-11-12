@@ -4,5 +4,6 @@
    - Everytime .flatMap is called, a closure is submitted to an Executor.
    - Eager evaluation + executor submission => impossible to reason
      when the job started and finished.
-** Effects and Side Effects
-   - 
+** Free Monad - Where can we find this to be useful?
+   - In testing.
+     - We can create partial interpreters.

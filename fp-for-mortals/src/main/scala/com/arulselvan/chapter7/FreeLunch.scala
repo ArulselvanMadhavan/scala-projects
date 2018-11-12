@@ -56,23 +56,24 @@ object FreeLunch {
     }
 
     // Ast is part of the F instruction set.
-    def liftF[F[_]](implicit I:Ast :<: F) = new Machines[Free[F, ?]] {
-      def getTime = Free.liftF(I.inj(GetTime()))
-      def getManaged = Free.liftF(I.inj(GetManaged()))
-      def getAlive = Free.liftF(I.inj(GetAlive()))
+    def liftF[F[_]](implicit I: Ast :<: F) = new Machines[Free[F, ?]] {
+      def getTime                  = Free.liftF(I.inj(GetTime()))
+      def getManaged               = Free.liftF(I.inj(GetManaged()))
+      def getAlive                 = Free.liftF(I.inj(GetAlive()))
       def start(node: MachineNode) = Free.liftF(I.inj(Start(node)))
-      def stop(node: MachineNode) = Free.liftF(I.inj(Stop(node)))
+      def stop(node: MachineNode)  = Free.liftF(I.inj(Stop(node)))
     }
 
-    def program[F[_] : Monad](M : Machines[F]):F[Unit] = ???
+    def program[F[_]: Monad](M: Machines[F]): F[Unit] = ???
     val interpreter: Machines.Ast ~> IO[Throwable, ?] = ???
-    val app: IO[Throwable, Unit] = program[Free[Machines.Ast, ?]](Machines.liftF).foldMap(interpreter)
-    def interpreter[F[_]](f: Machines[F]): Ast ~> F = Lambda[Ast ~> F]{
-      case GetTime() => f.getTime
+    val app: IO[Throwable, Unit] =
+      program[Free[Machines.Ast, ?]](Machines.liftF).foldMap(interpreter)
+    def interpreter[F[_]](f: Machines[F]): Ast ~> F = Lambda[Ast ~> F] {
+      case GetTime()    => f.getTime
       case GetManaged() => f.getManaged
-      case GetAlive() => f.getAlive
-      case Start(node) => f.start(node)
-      case Stop(node)=> f.stop(node)
+      case GetAlive()   => f.getAlive
+      case Start(node)  => f.start(node)
+      case Stop(node)   => f.stop(node)
     }
   }
 
@@ -85,21 +86,21 @@ object FreeLunch {
 
     sealed abstract class Ast[A]
     final case class GetBacklog() extends Ast[Int]
-    final case class GetAgents() extends Ast[Int]
+    final case class GetAgents()  extends Ast[Int]
 
     def liftF = new Drone[Free[Ast, ?]] {
       def getBacklog = Free.liftF(GetBacklog())
-      def getAgents = Free.liftF(GetAgents())
+      def getAgents  = Free.liftF(GetAgents())
     }
 
-    def liftF[F[_]](implicit I: Ast :<: F) = new Drone[Free[F, ?]]{
+    def liftF[F[_]](implicit I: Ast :<: F) = new Drone[Free[F, ?]] {
       def getBacklog = Free.liftF(I.inj(GetBacklog()))
-      def getAgents = Free.liftF(I.inj(GetAgents()))
+      def getAgents  = Free.liftF(I.inj(GetAgents()))
     }
 
-    def interpreter[F[_]](f:Drone[F]):Ast ~> F = Lambda[Ast ~> F]{
+    def interpreter[F[_]](f: Drone[F]): Ast ~> F = Lambda[Ast ~> F] {
       case GetBacklog() => f.getBacklog
-      case GetAgents() => f.getAgents
+      case GetAgents()  => f.getAgents
     }
   }
 
@@ -119,11 +120,11 @@ object FreeLunch {
   //   implicit def right[F[_], G[_]]: G :<: Coproduct[F, G, ?] = ???
   // }
 
-  def program[F[_] : Monad](M: Machines[F], D:Drone[F]):F[Unit] = ???
-  val MachinesIO:Machines[IO[Throwable, ?]] = ???
-  val DroneIO:Drone[IO[Throwable, ?]] = ???
-  val M:Machines.Ast ~> IO[Throwable, ?] = Machines.interpreter(MachinesIO)
-  val D:Drone.Ast ~> IO[Throwable, ?] = Drone.interpreter(DroneIO)
+  def program[F[_]: Monad](M: Machines[F], D: Drone[F]): F[Unit] = ???
+  val MachinesIO: Machines[IO[Throwable, ?]]                     = ???
+  val DroneIO: Drone[IO[Throwable, ?]]                           = ???
+  val M: Machines.Ast ~> IO[Throwable, ?]                        = Machines.interpreter(MachinesIO)
+  val D: Drone.Ast ~> IO[Throwable, ?]                           = Drone.interpreter(DroneIO)
 
   // Larger InstructionSet that can operate on both Machines and Drones.
   // object NaturalTransformation {
@@ -132,5 +133,5 @@ object FreeLunch {
 
   type Ast[a] = Coproduct[Machines.Ast, Drone.Ast, a]
   val interpreter: Ast ~> IO[Throwable, ?] = NaturalTransformation.or(M, D)
-  val app: IO[Unit] = program[Free[Ast, ?]](Machines.liftF, Drone.liftF).foldMap(interpreter)
+  // val app: IO[Throwable, Unit] = program[Free[Ast, ?]](Machines.liftF, Drone.liftF).foldMap(interpreter)
 }
