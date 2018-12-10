@@ -1,0 +1,178 @@
+{
+    "version" : "1.0.0",
+    "project" : {
+        "name" : "tagless-experiments",
+        "directory" : "/Users/arul.madhavan/dev/scala-projects/tagless-experiments",
+        "sources" : [
+            "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/src/main/scala-2.12",
+            "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/src/main/scala",
+            "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/src/main/java",
+            "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/target/scala-2.12/src_managed/main"
+        ],
+        "dependencies" : [
+        ],
+        "classpath" : [
+            "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.12.7.jar",
+            "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-core_2.12/jars/cats-core_2.12-1.4.0.jar",
+            "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-macros_2.12/jars/cats-macros_2.12-1.4.0.jar",
+            "/Users/arul.madhavan/.ivy2/cache/org.typelevel/machinist_2.12/jars/machinist_2.12-0.6.5.jar",
+            "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.12.7.jar",
+            "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-kernel_2.12/jars/cats-kernel_2.12-1.4.0.jar"
+        ],
+        "out" : "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/.bloop/tagless-experiments",
+        "classesDir" : "/Users/arul.madhavan/dev/scala-projects/tagless-experiments/.bloop/tagless-experiments/scala-2.12/classes",
+        "scala" : {
+            "organization" : "org.scala-lang",
+            "name" : "scala-compiler",
+            "version" : "2.12.7",
+            "options" : [
+                "-encoding",
+                "UTF-8",
+                "-deprecation",
+                "-unchecked",
+                "-feature",
+                "-language:higherKinds",
+                "-Xlint",
+                "-Xfatal-warnings",
+                "-Ypartial-unification",
+                "-Xplugin:/Users/arul.madhavan/.ivy2/cache/org.spire-math/kind-projector_2.12/jars/kind-projector_2.12-0.9.3.jar"
+            ],
+            "jars" : [
+                "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.12.7.jar",
+                "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.12.7.jar",
+                "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.12.7.jar",
+                "/Users/arul.madhavan/.ivy2/cache/org.scala-lang.modules/scala-xml_2.12/bundles/scala-xml_2.12-1.0.6.jar",
+                "/Users/arul.madhavan/.ivy2/cache/jline/jline/jars/jline-2.14.6.jar"
+            ],
+            "setup" : {
+                "order" : "mixed",
+                "addLibraryToBootClasspath" : true,
+                "addCompilerToClasspath" : false,
+                "addExtraJarsToClasspath" : false,
+                "manageBootClasspath" : true,
+                "filterLibraryFromClasspath" : true
+            }
+        },
+        "java" : {
+            "options" : [
+            ]
+        },
+        "test" : {
+            "frameworks" : [
+                {
+                    "names" : [
+                        "org.scalacheck.ScalaCheckFramework"
+                    ]
+                },
+                {
+                    "names" : [
+                        "org.specs2.runner.Specs2Framework",
+                        "org.specs2.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names" : [
+                        "org.specs.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names" : [
+                        "org.scalatest.tools.Framework",
+                        "org.scalatest.tools.ScalaTestFramework"
+                    ]
+                },
+                {
+                    "names" : [
+                        "com.novocode.junit.JUnitFramework"
+                    ]
+                }
+            ],
+            "options" : {
+                "excludes" : [
+                ],
+                "arguments" : [
+                ]
+            }
+        },
+        "platform" : {
+            "name" : "jvm",
+            "config" : {
+                "home" : "/usr/local/graal/graalvm-ee-1.0.0-rc5/Contents/Home/jre",
+                "options" : [
+                ]
+            },
+            "mainClass" : [
+            ]
+        },
+        "resolution" : {
+            "modules" : [
+                {
+                    "organization" : "org.scala-lang",
+                    "name" : "scala-library",
+                    "version" : "2.12.7",
+                    "artifacts" : [
+                        {
+                            "name" : "scala-library",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.12.7.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization" : "org.typelevel",
+                    "name" : "cats-core_2.12",
+                    "version" : "1.4.0",
+                    "artifacts" : [
+                        {
+                            "name" : "cats-core_2.12",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-core_2.12/jars/cats-core_2.12-1.4.0.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization" : "org.typelevel",
+                    "name" : "cats-macros_2.12",
+                    "version" : "1.4.0",
+                    "artifacts" : [
+                        {
+                            "name" : "cats-macros_2.12",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-macros_2.12/jars/cats-macros_2.12-1.4.0.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization" : "org.typelevel",
+                    "name" : "machinist_2.12",
+                    "version" : "0.6.5",
+                    "artifacts" : [
+                        {
+                            "name" : "machinist_2.12",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.typelevel/machinist_2.12/jars/machinist_2.12-0.6.5.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization" : "org.scala-lang",
+                    "name" : "scala-reflect",
+                    "version" : "2.12.7",
+                    "artifacts" : [
+                        {
+                            "name" : "scala-reflect",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.12.7.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization" : "org.typelevel",
+                    "name" : "cats-kernel_2.12",
+                    "version" : "1.4.0",
+                    "artifacts" : [
+                        {
+                            "name" : "cats-kernel_2.12",
+                            "path" : "/Users/arul.madhavan/.ivy2/cache/org.typelevel/cats-kernel_2.12/jars/cats-kernel_2.12-1.4.0.jar"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

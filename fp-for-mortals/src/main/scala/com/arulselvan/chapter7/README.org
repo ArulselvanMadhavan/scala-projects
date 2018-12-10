@@ -37,4 +37,12 @@
    - If we have an ~F[_]~ that is not monadic, we may implement
      /apply2/ in parallel.
 ** IO
-   - A Free data structure specialized for use as a general effect monad.
+   - A Free data structure specialized for use as a general effect
+     monad.
+
+Blog:
+Purpose: To impress people with our engineering work.
+WHat kind of people?
+1. Medium 
+2. Engineering
+
